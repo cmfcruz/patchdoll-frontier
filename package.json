@@ -14,7 +14,7 @@
     "node": ">=24"
   },
   "dependencies": {
-    "@anthropic-ai/claude-code": "2.1.191",
+    "@anthropic-ai/claude-code": "2.1.158",
     "@openai/codex": "0.139.0",
     "@slack/bolt": "4.7.3"
   },
@@ -24,6 +24,7 @@
   },
   "overrides": {
     "body-parser": "2.2.2",
-    "axios": "1.17.0"
+    "axios": "1.17.0",
+    "qs": "6.15.2"
   }
 }
