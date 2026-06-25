@@ -30,13 +30,22 @@ function resolveProvider(): Provider {
 
 // --- HTTP bridge ---
 export const host = process.env.HOST ?? "127.0.0.1";
-export const port = Number.parseInt(process.env.PORT ?? "3000", 10);
+export const port = resolvePort();
+
+function resolvePort(): number {
+  const value = Number.parseInt(process.env.PORT ?? "3000", 10);
+  if (!Number.isFinite(value) || value < 1 || value > 65535) {
+    throw new Error(`PORT must be a valid port number (1–65535); got: '${process.env.PORT ?? ""}'`);
+  }
+  return value;
+}
 
 // --- Workspace + shared agent plumbing ---
 export const workspace = resolve("/workspace");
 
 // URL the agent uses to reach the Patchdoll MCP server we expose from this same
-// process (the GitHub access tool).
+// process (the GitHub access tool). Always loopback — the MCP endpoint is a
+// local control-plane path, never a public interface, regardless of HOST.
 export const mcpUrl = `http://127.0.0.1:${port}/mcp`;
 
 // --- Codex ---
