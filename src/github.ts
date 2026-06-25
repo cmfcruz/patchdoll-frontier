@@ -51,7 +51,7 @@ let cachedIdentity: GitIdentity | undefined;
 export async function enableGithubAccess(): Promise<string> {
   if (!githubConfigured()) {
     throw new Error(
-      "GitHub App is not configured; set EMBER_GITHUB_APP_ID, EMBER_GITHUB_APP_INSTALLATION_ID and EMBER_GITHUB_APP_PRIVATE_KEY_BASE64"
+      "GitHub App is not configured; set GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID and GITHUB_APP_PRIVATE_KEY_BASE64"
     );
   }
 
@@ -180,7 +180,7 @@ function githubAppJwt(): string {
 function decodePrivateKey(): string {
   const decoded = Buffer.from(githubPrivateKeyBase64 as string, "base64").toString("utf8");
   if (!decoded.includes("-----BEGIN")) {
-    throw new Error("EMBER_GITHUB_APP_PRIVATE_KEY_BASE64 must be the base64 of a PEM private key");
+    throw new Error("GITHUB_APP_PRIVATE_KEY_BASE64 must be the base64 of a PEM private key");
   }
   return decoded;
 }

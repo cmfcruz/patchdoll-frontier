@@ -11,7 +11,7 @@ import { homedir } from "node:os";
 import { resolve } from "node:path";
 
 // --- Provider selection ---
-// Each image variant ships exactly one agent and bakes EMBER_PROVIDER. There is
+// Each image variant ships exactly one agent and bakes PROVIDER. There is
 // no default: a missing or unknown value is a build/run misconfiguration, so we
 // fail loudly at startup rather than silently picking one.
 export type Provider = "codex" | "claude";
@@ -19,12 +19,12 @@ export type Provider = "codex" | "claude";
 export const provider: Provider = resolveProvider();
 
 function resolveProvider(): Provider {
-  const value = (process.env.EMBER_PROVIDER ?? "").trim().toLowerCase();
+  const value = (process.env.PROVIDER ?? "").trim().toLowerCase();
   if (value === "codex" || value === "claude") {
     return value;
   }
   throw new Error(
-    `EMBER_PROVIDER must be 'codex' or 'claude' (set by the image variant); got: '${process.env.EMBER_PROVIDER ?? ""}'`
+    `PROVIDER must be 'codex' or 'claude' (set by the image variant); got: '${process.env.PROVIDER ?? ""}'`
   );
 }
 
@@ -41,7 +41,7 @@ export const mcpUrl = `http://127.0.0.1:${port}/mcp`;
 
 // --- Codex ---
 export const codexBin = "codex";
-export const codexTimeoutMs = Number.parseInt(process.env.EMBER_CODEX_TIMEOUT_MS ?? "1800000", 10);
+export const codexTimeoutMs = Number.parseInt(process.env.CODEX_TIMEOUT_MS ?? "1800000", 10);
 
 export type ReasoningEffort = "minimal" | "low" | "medium" | "high" | "xhigh";
 
@@ -69,7 +69,7 @@ export const codexSettings: CodexSettings = tidy({
 // stream-json with bypassPermissions (the only mode that never pauses for
 // interactive approval in a non-interactive run).
 export const claudeBin = "claude";
-export const claudeTimeoutMs = Number.parseInt(process.env.EMBER_CLAUDE_TIMEOUT_MS ?? "1800000", 10);
+export const claudeTimeoutMs = Number.parseInt(process.env.CLAUDE_TIMEOUT_MS ?? "1800000", 10);
 export const claudePermissionMode = "bypassPermissions";
 
 export type ClaudeEffort = "low" | "medium" | "high" | "xhigh" | "max";
@@ -92,21 +92,21 @@ export const claudeSettings: ClaudeSettings = tidy({
 // When all three are set, the agent can call the `ember_enable_github` MCP tool
 // to wire up a git credential helper that fetches a short-lived installation
 // token from this bridge on demand. The token is never handed to the model.
-export const githubAppId = process.env.EMBER_GITHUB_APP_ID;
-export const githubInstallationId = process.env.EMBER_GITHUB_APP_INSTALLATION_ID;
-export const githubPrivateKeyBase64 = process.env.EMBER_GITHUB_APP_PRIVATE_KEY_BASE64;
+export const githubAppId = process.env.GITHUB_APP_ID;
+export const githubInstallationId = process.env.GITHUB_APP_INSTALLATION_ID;
+export const githubPrivateKeyBase64 = process.env.GITHUB_APP_PRIVATE_KEY_BASE64;
 
 // Identity used for commits the agent makes. When unset, it is derived from the
 // GitHub App's bot account so commits attribute correctly; these only override.
-export const gitUserNameOverride = process.env.EMBER_GIT_USER_NAME;
-export const gitUserEmailOverride = process.env.EMBER_GIT_USER_EMAIL;
+export const gitUserNameOverride = process.env.GIT_USER_NAME;
+export const gitUserEmailOverride = process.env.GIT_USER_EMAIL;
 
 // Home directory the agent runs under; the credential helper + git config live here.
 export const emberHome = process.env.HOME ?? homedir();
 
 // --- Slack ---
-export const slackBotToken = process.env.EMBER_SLACK_BOT_TOKEN;
-export const slackAppToken = process.env.EMBER_SLACK_APP_TOKEN;
+export const slackBotToken = process.env.SLACK_BOT_TOKEN;
+export const slackAppToken = process.env.SLACK_APP_TOKEN;
 
 // Slack rejects messages longer than 4000 characters; stay comfortably under it.
 export const maxSlackTextLength = 3900;
@@ -127,7 +127,7 @@ export function messageOf(error: unknown): string {
 
 // Validate an optional enum-valued env var. An unset/blank value uses the
 // fallback; a set-but-invalid value is a misconfiguration we fail loudly on
-// (consistent with EMBER_PROVIDER) so typos surface at startup, not at runtime.
+// (consistent with PROVIDER) so typos surface at startup, not at runtime.
 function parseEnum<T extends string>(
   name: string,
   raw: string | undefined,

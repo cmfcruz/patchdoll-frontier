@@ -19,7 +19,7 @@ Ember uses Slack Socket Mode, so it does not need a public webhook URL.
 3. Create an app-level token with this scope:
    - `connections:write`
 4. Save the app-level token as:
-   - `EMBER_SLACK_APP_TOKEN`
+   - `SLACK_APP_TOKEN`
 
 It should look like `xapp-...`.
 
@@ -38,7 +38,7 @@ Then install or reinstall the app to the workspace.
 
 Save the bot token as:
 
-- `EMBER_SLACK_BOT_TOKEN`
+- `SLACK_BOT_TOKEN`
 
 It should look like `xoxb-...`.
 
@@ -63,7 +63,7 @@ ghcr.io/cmfcruz/ember:latest-codex    # runs Codex CLI
 ghcr.io/cmfcruz/ember:latest-claude   # runs Claude Code
 ```
 
-The variant bakes `EMBER_PROVIDER` into the image; you do not set it yourself.
+The variant bakes `PROVIDER` into the image; you do not set it yourself.
 Pull releases (`1.2.3-codex`, `1.2-claude`, …) or PR images (`pr-123-claude`)
 the same way.
 
@@ -72,8 +72,8 @@ the same way.
 Set these as balena environment variables or secrets, not in the image:
 
 ```text
-EMBER_SLACK_BOT_TOKEN=xoxb-...
-EMBER_SLACK_APP_TOKEN=xapp-...
+SLACK_BOT_TOKEN=xoxb-...
+SLACK_APP_TOKEN=xapp-...
 ```
 
 ## 7. Authenticate the agent

@@ -11,7 +11,7 @@ mutation — to change the model or effort, restart with different env vars.
 
 ## Architecture
 
-One provider is baked into each image variant (`EMBER_PROVIDER`); nothing
+One provider is baked into each image variant (`PROVIDER`); nothing
 branches on the provider at runtime beyond a single seam.
 
 | File         | Responsibility |
@@ -32,7 +32,7 @@ branches on the provider at runtime beyond a single seam.
 
 Set by the image variant (do not override):
 
-- `EMBER_PROVIDER` — `codex` or `claude`. Baked into the image; required.
+- `PROVIDER` — `codex` or `claude`. Baked into the image; required.
 
 HTTP bridge:
 
@@ -44,17 +44,17 @@ Model / effort (optional):
 - Claude: `CLAUDE_MODEL` (default `sonnet`), `CLAUDE_EFFORT` (`low|medium|high|xhigh|max`, default `high`).
 - An invalid effort value fails loudly at startup.
 
-Timeouts (optional): `EMBER_CODEX_TIMEOUT_MS`, `EMBER_CLAUDE_TIMEOUT_MS` (default 30 min).
+Timeouts (optional): `CODEX_TIMEOUT_MS`, `CLAUDE_TIMEOUT_MS` (default 30 min).
 
-Logging: `EMBER_LOG_LEVEL` (`error|warn|info|debug`, default `info`).
+Logging: `LOG_LEVEL` (`error|warn|info|debug`, default `info`).
 
-Slack (enables the adapter when both are set): `EMBER_SLACK_BOT_TOKEN`,
-`EMBER_SLACK_APP_TOKEN`. See [docs/slack-bot-setup.md](docs/slack-bot-setup.md).
+Slack (enables the adapter when both are set): `SLACK_BOT_TOKEN`,
+`SLACK_APP_TOKEN`. See [docs/slack-bot-setup.md](docs/slack-bot-setup.md).
 
 GitHub access (enables `ember_enable_github` when all three are set):
-`EMBER_GITHUB_APP_ID`, `EMBER_GITHUB_APP_INSTALLATION_ID`,
-`EMBER_GITHUB_APP_PRIVATE_KEY_BASE64`. Optional commit identity overrides:
-`EMBER_GIT_USER_NAME`, `EMBER_GIT_USER_EMAIL`. See
+`GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`,
+`GITHUB_APP_PRIVATE_KEY_BASE64`. Optional commit identity overrides:
+`GIT_USER_NAME`, `GIT_USER_EMAIL`. See
 [docs/github-access.md](docs/github-access.md).
 
 Agent credentials are read by the CLIs themselves (e.g. `OPENAI_API_KEY`,

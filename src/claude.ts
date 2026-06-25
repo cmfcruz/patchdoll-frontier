@@ -1,7 +1,7 @@
 // Everything related to running Claude Code: building the `claude` invocation
 // from the env-resolved settings and turning its `stream-json` output into
 // progress notes plus a final message. Mirrors codex.ts — the two are
-// interchangeable image variants selected by EMBER_PROVIDER.
+// interchangeable image variants selected by PROVIDER.
 //
 // The CLI flags match cmfcruz/patchdoll's Claude provider: a headless `-p`
 // stream-json run with `--permission-mode bypassPermissions` (the only mode

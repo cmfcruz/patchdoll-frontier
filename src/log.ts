@@ -1,7 +1,7 @@
 // Tiny leveled logger shared across the bridge.
 //
-// The level is controlled by EMBER_LOG_LEVEL (error | warn | info | debug),
-// defaulting to info. Set EMBER_LOG_LEVEL=debug to also log incoming Slack
+// The level is controlled by LOG_LEVEL (error | warn | info | debug),
+// defaulting to info. Set LOG_LEVEL=debug to also log incoming Slack
 // messages and agent invocations. Each call prints a single line so the output
 // stays readable in container/balena logs.
 
@@ -10,7 +10,7 @@ export type LogLevel = "error" | "warn" | "info" | "debug";
 const RANK: Record<LogLevel, number> = { error: 0, warn: 1, info: 2, debug: 3 };
 
 function resolveLevel(): LogLevel {
-  const raw = (process.env.EMBER_LOG_LEVEL ?? "info").toLowerCase();
+  const raw = (process.env.LOG_LEVEL ?? "info").toLowerCase();
   return (raw in RANK ? raw : "info") as LogLevel;
 }
 

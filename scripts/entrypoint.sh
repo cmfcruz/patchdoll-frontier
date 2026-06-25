@@ -32,13 +32,13 @@ authenticate_claude() {
   fi
 }
 
-# EMBER_PROVIDER is baked into the image variant (see Dockerfile); there is no
+# PROVIDER is baked into the image variant (see Dockerfile); there is no
 # default and no runtime override.
-case "${EMBER_PROVIDER:-}" in
+case "${PROVIDER:-}" in
   codex) authenticate_codex ;;
   claude) authenticate_claude ;;
   *)
-    log "EMBER_PROVIDER must be 'codex' or 'claude' (set by the image variant); got: '${EMBER_PROVIDER:-}'"
+    log "PROVIDER must be 'codex' or 'claude' (set by the image variant); got: '${PROVIDER:-}'"
     exit 1
     ;;
 esac

@@ -5,8 +5,8 @@ ARG SAFE_CHAIN_INSTALL_DIR=/usr/local/.safe-chain
 
 # Per-agent image variant. Each image ships exactly one provider; there is no
 # default and no combined image. Build the variant explicitly with:
-#   --build-arg EMBER_PROVIDER_VARIANT=claude   (or codex)
-ARG EMBER_PROVIDER_VARIANT
+#   --build-arg PROVIDER_VARIANT=claude   (or codex)
+ARG PROVIDER_VARIANT
 
 FROM node:24-bookworm AS safe-chain
 
@@ -56,7 +56,7 @@ RUN npm run build
 FROM deps AS prod-deps
 
 ARG TARGETARCH
-ARG EMBER_PROVIDER_VARIANT
+ARG PROVIDER_VARIANT
 # Validate the selected provider's binary, then drop the other provider so the
 # image ships exactly one agent.
 RUN set -eux; \
@@ -67,7 +67,7 @@ RUN set -eux; \
     arm64) npm_arch="arm64" ;; \
     *) echo "Unsupported TARGETARCH: ${target_arch}" >&2; exit 1 ;; \
   esac; \
-  case "${EMBER_PROVIDER_VARIANT}" in \
+  case "${PROVIDER_VARIANT}" in \
     codex) \
       test -f "node_modules/@openai/codex-linux-${npm_arch}/package.json"; \
       node_modules/.bin/codex --version; \
@@ -75,14 +75,14 @@ RUN set -eux; \
     claude) \
       test -x "node_modules/@anthropic-ai/claude-code-linux-${npm_arch}/claude"; \
       rm -rf node_modules/@openai node_modules/.bin/codex ;; \
-    *) echo "EMBER_PROVIDER_VARIANT must be 'codex' or 'claude', got: '${EMBER_PROVIDER_VARIANT}'" >&2; exit 1 ;; \
+    *) echo "PROVIDER_VARIANT must be 'codex' or 'claude', got: '${PROVIDER_VARIANT}'" >&2; exit 1 ;; \
   esac
 
 FROM node:24-bookworm-slim AS runtime
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-ARG EMBER_PROVIDER_VARIANT
+ARG PROVIDER_VARIANT
 
 WORKDIR /app
 
@@ -106,13 +106,13 @@ COPY --from=build --chown=ember:ember /app/dist ./dist
 COPY --chown=ember:ember scripts/entrypoint.sh /usr/local/bin/ember-entrypoint
 
 # Bake the provider into the image as the single source of truth. config.ts and
-# the entrypoint read EMBER_PROVIDER; there is no runtime override.
+# the entrypoint read PROVIDER; there is no runtime override.
 # DISABLE_AUTOUPDATER keeps the Claude Code CLI from self-updating (no-op for Codex).
 ENV PATH="/app/node_modules/.bin:${PATH}" \
   HOME=/home/ember \
   HOST=127.0.0.1 \
   PORT=3000 \
-  EMBER_PROVIDER=${EMBER_PROVIDER_VARIANT} \
+  PROVIDER=${PROVIDER_VARIANT} \
   DISABLE_AUTOUPDATER=1
 
 EXPOSE 3000

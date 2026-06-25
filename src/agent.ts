@@ -1,6 +1,6 @@
 // The agent abstraction shared by the two image variants.
 //
-// This build ships one provider per image (see config.ts / EMBER_PROVIDER).
+// This build ships one provider per image (see config.ts / PROVIDER).
 // Both codex.ts and claude.ts implement the small AgentProvider interface below,
 // and `agent` resolves to whichever one this image was built for. The bridge,
 // the Slack adapter, and the MCP server only ever talk to `agent`, so nothing

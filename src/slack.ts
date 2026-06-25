@@ -68,7 +68,7 @@ const allControlChars = /[\u0000-\u001f\u007f]/g;
  */
 export async function startSlackApp(): Promise<App | undefined> {
   if (!slackEnabled()) {
-    log.info("slack adapter disabled; set EMBER_SLACK_BOT_TOKEN and EMBER_SLACK_APP_TOKEN to enable it");
+    log.info("slack adapter disabled; set SLACK_BOT_TOKEN and SLACK_APP_TOKEN to enable it");
     return undefined;
   }
 

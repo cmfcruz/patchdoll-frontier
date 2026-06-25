@@ -23,9 +23,9 @@ Create a GitHub App, install it on the target repos/org, and set these as
 balena environment variables or secrets (not in the image):
 
 ```text
-EMBER_GITHUB_APP_ID=...
-EMBER_GITHUB_APP_INSTALLATION_ID=...
-EMBER_GITHUB_APP_PRIVATE_KEY_BASE64=...   # base64 of the App's PEM private key
+GITHUB_APP_ID=...
+GITHUB_APP_INSTALLATION_ID=...
+GITHUB_APP_PRIVATE_KEY_BASE64=...   # base64 of the App's PEM private key
 ```
 
 Generate the base64 private key with:
@@ -48,12 +48,12 @@ The bridge resolves this during `ember_enable_github` via `GET /app` (for the
 slug) and `GET /users/<slug>[bot]` (for the id). Set either variable to override:
 
 ```text
-EMBER_GIT_USER_NAME=...
-EMBER_GIT_USER_EMAIL=...
+GIT_USER_NAME=...
+GIT_USER_EMAIL=...
 ```
 
 The App's installation permissions (e.g. Contents: read & write) determine what
-Codex can do. If the `EMBER_GITHUB_APP_*` variables are unset, `ember_enable_github`
+Codex can do. If the `GITHUB_APP_*` variables are unset, `ember_enable_github`
 returns an error and Codex simply runs without GitHub access.
 
 ## Security note
