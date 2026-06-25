@@ -5,13 +5,18 @@ type ConfigModule = typeof import("./config.js");
 
 const envKeys = [
   "PROVIDER",
+  "EMBER_PROVIDER",
   "PORT",
   "CODEX_TIMEOUT_MS",
   "CLAUDE_TIMEOUT_MS",
   "CODEX_REASONING_EFFORT",
   "CLAUDE_EFFORT",
   "CODEX_MODEL",
-  "CLAUDE_MODEL"
+  "CLAUDE_MODEL",
+  "SLACK_BOT_TOKEN",
+  "SLACK_APP_TOKEN",
+  "EMBER_SLACK_BOT_TOKEN",
+  "EMBER_SLACK_APP_TOKEN"
 ];
 
 let importId = 0;
@@ -60,6 +65,34 @@ test("config accepts explicit integer port and timeout env values", async () => 
   assert.equal(config.port, 3456);
   assert.equal(config.codexTimeoutMs, 123);
   assert.equal(config.claudeTimeoutMs, 456);
+});
+
+test("config accepts legacy Ember env names for migrated deployments", async () => {
+  const config = await importConfig({
+    EMBER_PROVIDER: "claude",
+    EMBER_SLACK_BOT_TOKEN: "xoxb-legacy",
+    EMBER_SLACK_APP_TOKEN: "xapp-legacy"
+  });
+
+  assert.equal(config.provider, "claude");
+  assert.equal(config.slackBotToken, "xoxb-legacy");
+  assert.equal(config.slackAppToken, "xapp-legacy");
+  assert.equal(config.slackEnabled(), true);
+});
+
+test("config prefers unprefixed env names over legacy Ember names", async () => {
+  const config = await importConfig({
+    PROVIDER: "codex",
+    EMBER_PROVIDER: "claude",
+    SLACK_BOT_TOKEN: "xoxb-new",
+    SLACK_APP_TOKEN: "xapp-new",
+    EMBER_SLACK_BOT_TOKEN: "xoxb-legacy",
+    EMBER_SLACK_APP_TOKEN: "xapp-legacy"
+  });
+
+  assert.equal(config.provider, "codex");
+  assert.equal(config.slackBotToken, "xoxb-new");
+  assert.equal(config.slackAppToken, "xapp-new");
 });
 
 test("config rejects malformed numeric env values instead of coercing them", async () => {

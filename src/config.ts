@@ -19,12 +19,13 @@ export type Provider = "codex" | "claude";
 export const provider: Provider = resolveProvider();
 
 function resolveProvider(): Provider {
-  const value = (process.env.PROVIDER ?? "").trim().toLowerCase();
+  const raw = envValue("PROVIDER", "EMBER_PROVIDER") ?? "";
+  const value = raw.trim().toLowerCase();
   if (value === "codex" || value === "claude") {
     return value;
   }
   throw new Error(
-    `PROVIDER must be 'codex' or 'claude' (set by the image variant); got: '${process.env.PROVIDER ?? ""}'`
+    `PROVIDER must be 'codex' or 'claude' (set by the image variant); got: '${raw}'`
   );
 }
 
@@ -120,8 +121,8 @@ export const gitUserEmailOverride = process.env.GIT_USER_EMAIL;
 export const patchdollHome = process.env.HOME ?? homedir();
 
 // --- Slack ---
-export const slackBotToken = process.env.SLACK_BOT_TOKEN;
-export const slackAppToken = process.env.SLACK_APP_TOKEN;
+export const slackBotToken = envValue("SLACK_BOT_TOKEN", "EMBER_SLACK_BOT_TOKEN");
+export const slackAppToken = envValue("SLACK_APP_TOKEN", "EMBER_SLACK_APP_TOKEN");
 
 // Slack rejects messages longer than 4000 characters; stay comfortably under it.
 export const maxSlackTextLength = 3900;
@@ -139,6 +140,13 @@ export function messageOf(error: unknown): string {
 }
 
 // --- env helpers ---
+
+function envValue(name: string, legacyName?: string): string | undefined {
+  const value = process.env[name]?.trim();
+  if (value) return value;
+  const legacyValue = legacyName ? process.env[legacyName]?.trim() : undefined;
+  return legacyValue || undefined;
+}
 
 function parseIntegerEnv(
   name: string,
