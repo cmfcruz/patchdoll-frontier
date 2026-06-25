@@ -19,7 +19,7 @@ export type Provider = "codex" | "claude";
 export const provider: Provider = resolveProvider();
 
 function resolveProvider(): Provider {
-  const raw = envValue("PROVIDER", "EMBER_PROVIDER") ?? "";
+  const raw = process.env.PROVIDER ?? "";
   const value = raw.trim().toLowerCase();
   if (value === "codex" || value === "claude") {
     return value;
@@ -32,6 +32,13 @@ function resolveProvider(): Provider {
 // --- HTTP bridge ---
 export const host = process.env.HOST ?? "127.0.0.1";
 export const port = parseIntegerEnv("PORT", process.env.PORT, 3000, 1, 65535, "a valid port number");
+
+// --- Logging ---
+export type LogLevel = "error" | "warn" | "info" | "debug";
+
+const validLogLevels = new Set<LogLevel>(["error", "warn", "info", "debug"]);
+
+export const logLevel: LogLevel = parseEnum("LOG_LEVEL", process.env.LOG_LEVEL, validLogLevels, "info") ?? "info";
 
 // --- Workspace + shared agent plumbing ---
 export const workspace = resolve("/workspace");
@@ -121,8 +128,8 @@ export const gitUserEmailOverride = process.env.GIT_USER_EMAIL;
 export const patchdollHome = process.env.HOME ?? homedir();
 
 // --- Slack ---
-export const slackBotToken = envValue("SLACK_BOT_TOKEN", "EMBER_SLACK_BOT_TOKEN");
-export const slackAppToken = envValue("SLACK_APP_TOKEN", "EMBER_SLACK_APP_TOKEN");
+export const slackBotToken = process.env.SLACK_BOT_TOKEN?.trim() || undefined;
+export const slackAppToken = process.env.SLACK_APP_TOKEN?.trim() || undefined;
 
 // Slack rejects messages longer than 4000 characters; stay comfortably under it.
 export const maxSlackTextLength = 3900;
@@ -131,8 +138,23 @@ export function slackEnabled(): boolean {
   return Boolean(slackBotToken && slackAppToken);
 }
 
+export function missingSlackEnvVars(): string[] {
+  const missing: string[] = [];
+  if (!slackBotToken) missing.push("SLACK_BOT_TOKEN");
+  if (!slackAppToken) missing.push("SLACK_APP_TOKEN");
+  return missing;
+}
+
 export function githubConfigured(): boolean {
   return Boolean(githubAppId && githubInstallationId && githubPrivateKeyBase64);
+}
+
+export function missingGithubEnvVars(): string[] {
+  const missing: string[] = [];
+  if (!githubAppId) missing.push("GITHUB_APP_ID");
+  if (!githubInstallationId) missing.push("GITHUB_APP_INSTALLATION_ID");
+  if (!githubPrivateKeyBase64) missing.push("GITHUB_APP_PRIVATE_KEY_BASE64");
+  return missing;
 }
 
 export function messageOf(error: unknown): string {
@@ -140,13 +162,6 @@ export function messageOf(error: unknown): string {
 }
 
 // --- env helpers ---
-
-function envValue(name: string, legacyName?: string): string | undefined {
-  const value = process.env[name]?.trim();
-  if (value) return value;
-  const legacyValue = legacyName ? process.env[legacyName]?.trim() : undefined;
-  return legacyValue || undefined;
-}
 
 function parseIntegerEnv(
   name: string,

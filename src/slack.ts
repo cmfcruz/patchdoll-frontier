@@ -12,6 +12,7 @@ import { agent, type AgentRunResult } from "./agent.js";
 import {
   maxSlackTextLength,
   messageOf,
+  missingSlackEnvVars,
   slackAppToken,
   slackBotToken,
   slackEnabled,
@@ -68,7 +69,7 @@ const allControlChars = /[\u0000-\u001f\u007f]/g;
  */
 export async function startSlackApp(): Promise<App | undefined> {
   if (!slackEnabled()) {
-    log.info("slack adapter disabled; set SLACK_BOT_TOKEN and SLACK_APP_TOKEN to enable it");
+    log.info(`slack adapter disabled; missing ${missingSlackEnvVars().join(", ")}`);
     return undefined;
   }
 

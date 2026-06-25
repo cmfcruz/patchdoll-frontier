@@ -5,16 +5,11 @@
 // messages and agent invocations. Each call prints a single line so the output
 // stays readable in container/balena logs.
 
-export type LogLevel = "error" | "warn" | "info" | "debug";
+import { logLevel, type LogLevel } from "./config.js";
+
+export { logLevel };
 
 const RANK: Record<LogLevel, number> = { error: 0, warn: 1, info: 2, debug: 3 };
-
-function resolveLevel(): LogLevel {
-  const raw = (process.env.LOG_LEVEL ?? "info").toLowerCase();
-  return (raw in RANK ? raw : "info") as LogLevel;
-}
-
-export const logLevel: LogLevel = resolveLevel();
 const threshold = RANK[logLevel];
 
 export function isDebug(): boolean {

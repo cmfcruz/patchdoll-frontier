@@ -5,8 +5,8 @@ type ConfigModule = typeof import("./config.js");
 
 const envKeys = [
   "PROVIDER",
-  "EMBER_PROVIDER",
   "PORT",
+  "LOG_LEVEL",
   "CODEX_TIMEOUT_MS",
   "CLAUDE_TIMEOUT_MS",
   "CODEX_REASONING_EFFORT",
@@ -15,8 +15,9 @@ const envKeys = [
   "CLAUDE_MODEL",
   "SLACK_BOT_TOKEN",
   "SLACK_APP_TOKEN",
-  "EMBER_SLACK_BOT_TOKEN",
-  "EMBER_SLACK_APP_TOKEN"
+  "GITHUB_APP_ID",
+  "GITHUB_APP_INSTALLATION_ID",
+  "GITHUB_APP_PRIVATE_KEY_BASE64"
 ];
 
 let importId = 0;
@@ -67,32 +68,18 @@ test("config accepts explicit integer port and timeout env values", async () => 
   assert.equal(config.claudeTimeoutMs, 456);
 });
 
-test("config accepts legacy Ember env names for migrated deployments", async () => {
-  const config = await importConfig({
-    EMBER_PROVIDER: "claude",
-    EMBER_SLACK_BOT_TOKEN: "xoxb-legacy",
-    EMBER_SLACK_APP_TOKEN: "xapp-legacy"
-  });
+test("config validates log level env values", async () => {
+  const config = await importConfig({ PROVIDER: "codex", LOG_LEVEL: "debug" });
 
-  assert.equal(config.provider, "claude");
-  assert.equal(config.slackBotToken, "xoxb-legacy");
-  assert.equal(config.slackAppToken, "xapp-legacy");
-  assert.equal(config.slackEnabled(), true);
+  assert.equal(config.logLevel, "debug");
+  await assert.rejects(() => importConfig({ PROVIDER: "codex", LOG_LEVEL: "verbose" }), /LOG_LEVEL must be/);
 });
 
-test("config prefers unprefixed env names over legacy Ember names", async () => {
-  const config = await importConfig({
-    PROVIDER: "codex",
-    EMBER_PROVIDER: "claude",
-    SLACK_BOT_TOKEN: "xoxb-new",
-    SLACK_APP_TOKEN: "xapp-new",
-    EMBER_SLACK_BOT_TOKEN: "xoxb-legacy",
-    EMBER_SLACK_APP_TOKEN: "xapp-legacy"
-  });
+test("config reports missing Slack env vars by canonical name", async () => {
+  const config = await importConfig({ PROVIDER: "codex" });
 
-  assert.equal(config.provider, "codex");
-  assert.equal(config.slackBotToken, "xoxb-new");
-  assert.equal(config.slackAppToken, "xapp-new");
+  assert.equal(config.slackEnabled(), false);
+  assert.deepEqual(config.missingSlackEnvVars(), ["SLACK_BOT_TOKEN", "SLACK_APP_TOKEN"]);
 });
 
 test("config rejects malformed numeric env values instead of coercing them", async () => {
@@ -100,4 +87,22 @@ test("config rejects malformed numeric env values instead of coercing them", asy
   await assert.rejects(() => importConfig({ PROVIDER: "codex", PORT: "1.5" }), /PORT must be/);
   await assert.rejects(() => importConfig({ PROVIDER: "codex", CODEX_TIMEOUT_MS: "bad" }), /CODEX_TIMEOUT_MS must be/);
   await assert.rejects(() => importConfig({ PROVIDER: "codex", CLAUDE_TIMEOUT_MS: "0" }), /CLAUDE_TIMEOUT_MS must be/);
+});
+
+test("config reports incomplete GitHub App env without requiring it at startup", async () => {
+  const missing = await importConfig({ PROVIDER: "codex", GITHUB_APP_ID: "123" });
+  assert.equal(missing.githubConfigured(), false);
+  assert.deepEqual(missing.missingGithubEnvVars(), [
+    "GITHUB_APP_INSTALLATION_ID",
+    "GITHUB_APP_PRIVATE_KEY_BASE64"
+  ]);
+
+  const complete = await importConfig({
+    PROVIDER: "codex",
+    GITHUB_APP_ID: "123",
+    GITHUB_APP_INSTALLATION_ID: "456",
+    GITHUB_APP_PRIVATE_KEY_BASE64: "base64-pem"
+  });
+  assert.equal(complete.githubConfigured(), true);
+  assert.deepEqual(complete.missingGithubEnvVars(), []);
 });

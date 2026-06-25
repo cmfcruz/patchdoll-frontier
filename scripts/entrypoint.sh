@@ -32,13 +32,14 @@ authenticate_claude() {
   fi
 }
 
-# PROVIDER is baked into the image variant (see Dockerfile); there is no
-# default and no runtime override.
-case "${PROVIDER:-}" in
+# PROVIDER is baked into the image variant (see Dockerfile).
+provider="${PROVIDER:-}"
+
+case "$provider" in
   codex) authenticate_codex ;;
   claude) authenticate_claude ;;
   *)
-    log "PROVIDER must be 'codex' or 'claude' (set by the image variant); got: '${PROVIDER:-}'"
+    log "PROVIDER must be 'codex' or 'claude'; got: '${provider}'"
     exit 1
     ;;
 esac

@@ -21,7 +21,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { resolve } from "node:path";
 
-import { host, messageOf, port, slackEnabled, workspace } from "./config.js";
+import { githubConfigured, host, messageOf, missingGithubEnvVars, port, slackEnabled, workspace } from "./config.js";
 import { agent } from "./agent.js";
 import { gitCredentialResponse } from "./github.js";
 import { log, logLevel } from "./log.js";
@@ -127,10 +127,20 @@ async function readJson(req: IncomingMessage): Promise<Record<string, unknown>> 
 // ---------------------------------------------------------------------------
 
 const slackApp = await startSlackApp();
+logGithubConfiguration();
 
 server.listen(port, host, () => {
   log.info(`patchdoll bridge listening on ${host}:${port} (provider: ${agent.name}, log level: ${logLevel})`);
 });
+
+function logGithubConfiguration(): void {
+  if (githubConfigured()) {
+    log.info("github app integration enabled");
+    return;
+  }
+
+  log.info(`github app integration disabled; missing ${missingGithubEnvVars().join(", ")}`);
+}
 
 let shuttingDown = false;
 process.once("SIGTERM", () => void shutdown("SIGTERM"));
