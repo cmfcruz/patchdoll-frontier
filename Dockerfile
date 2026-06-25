@@ -33,7 +33,7 @@ RUN npm safe-chain-verify
 FROM safe-chain AS deps
 
 WORKDIR /app
-COPY package*.json tsconfig.json ./
+COPY package*.json tsconfig*.json ./
 ARG TARGETARCH
 # Install both providers' deps here (their platform-specific agent binaries are
 # optional deps selected by npm_config_cpu). The prod-deps stage prunes whichever
@@ -46,7 +46,7 @@ RUN set -eux; \
     *) echo "Unsupported TARGETARCH: ${target_arch}" >&2; exit 1 ;; \
   esac; \
   env npm_config_cpu="${npm_arch}" npm_config_os=linux \
-    npm ci --include=optional --ignore-scripts
+    npm ci --include=optional
 
 FROM deps AS build
 
@@ -60,7 +60,7 @@ ARG PROVIDER_VARIANT
 # Validate the selected provider's binary, then drop the other provider so the
 # image ships exactly one agent.
 RUN set -eux; \
-  npm prune --omit=dev --include=optional --ignore-scripts; \
+  npm prune --omit=dev --include=optional; \
   target_arch="${TARGETARCH:-$(node -p 'process.arch')}"; \
   case "${target_arch}" in \
     amd64|x64) npm_arch="x64" ;; \

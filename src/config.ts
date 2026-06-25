@@ -30,15 +30,7 @@ function resolveProvider(): Provider {
 
 // --- HTTP bridge ---
 export const host = process.env.HOST ?? "127.0.0.1";
-export const port = resolvePort();
-
-function resolvePort(): number {
-  const value = Number.parseInt(process.env.PORT ?? "3000", 10);
-  if (!Number.isFinite(value) || value < 1 || value > 65535) {
-    throw new Error(`PORT must be a valid port number (1–65535); got: '${process.env.PORT ?? ""}'`);
-  }
-  return value;
-}
+export const port = parseIntegerEnv("PORT", process.env.PORT, 3000, 1, 65535, "a valid port number");
 
 // --- Workspace + shared agent plumbing ---
 export const workspace = resolve("/workspace");
@@ -50,7 +42,14 @@ export const mcpUrl = `http://127.0.0.1:${port}/mcp`;
 
 // --- Codex ---
 export const codexBin = "codex";
-export const codexTimeoutMs = Number.parseInt(process.env.CODEX_TIMEOUT_MS ?? "1800000", 10);
+export const codexTimeoutMs = parseIntegerEnv(
+  "CODEX_TIMEOUT_MS",
+  process.env.CODEX_TIMEOUT_MS,
+  1800000,
+  1,
+  undefined,
+  "a positive integer number of milliseconds"
+);
 
 export type ReasoningEffort = "minimal" | "low" | "medium" | "high" | "xhigh";
 
@@ -78,7 +77,14 @@ export const codexSettings: CodexSettings = tidy({
 // stream-json with bypassPermissions (the only mode that never pauses for
 // interactive approval in a non-interactive run).
 export const claudeBin = "claude";
-export const claudeTimeoutMs = Number.parseInt(process.env.CLAUDE_TIMEOUT_MS ?? "1800000", 10);
+export const claudeTimeoutMs = parseIntegerEnv(
+  "CLAUDE_TIMEOUT_MS",
+  process.env.CLAUDE_TIMEOUT_MS,
+  1800000,
+  1,
+  undefined,
+  "a positive integer number of milliseconds"
+);
 export const claudePermissionMode = "bypassPermissions";
 
 export type ClaudeEffort = "low" | "medium" | "high" | "xhigh" | "max";
@@ -133,6 +139,26 @@ export function messageOf(error: unknown): string {
 }
 
 // --- env helpers ---
+
+function parseIntegerEnv(
+  name: string,
+  raw: string | undefined,
+  fallback: number,
+  min: number,
+  max: number | undefined,
+  description: string
+): number {
+  const value = raw?.trim();
+  if (!value) return fallback;
+
+  const parsed = Number(value);
+  if (!/^\d+$/.test(value) || !Number.isSafeInteger(parsed) || parsed < min || (max !== undefined && parsed > max)) {
+    const range = max === undefined ? `>=${min}` : `${min}-${max}`;
+    throw new Error(`${name} must be ${description} (${range}); got: '${value}'`);
+  }
+
+  return parsed;
+}
 
 // Validate an optional enum-valued env var. An unset/blank value uses the
 // fallback; a set-but-invalid value is a misconfiguration we fail loudly on
