@@ -33,7 +33,7 @@ function format(detail: unknown): string {
 function emit(level: LogLevel, message: string, detail?: unknown): void {
   if (RANK[level] > threshold) return;
 
-  const line = detail === undefined ? `ember [${level}] ${message}` : `ember [${level}] ${message} ${format(detail)}`;
+  const line = detail === undefined ? `patchdoll [${level}] ${message}` : `patchdoll [${level}] ${message} ${format(detail)}`;
   const stream = level === "error" ? console.error : level === "warn" ? console.warn : console.log;
   stream(line);
 }

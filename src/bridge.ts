@@ -129,7 +129,7 @@ async function readJson(req: IncomingMessage): Promise<Record<string, unknown>> 
 const slackApp = await startSlackApp();
 
 server.listen(port, host, () => {
-  log.info(`ember bridge listening on ${host}:${port} (provider: ${agent.name}, log level: ${logLevel})`);
+  log.info(`patchdoll bridge listening on ${host}:${port} (provider: ${agent.name}, log level: ${logLevel})`);
 });
 
 let shuttingDown = false;
@@ -139,7 +139,7 @@ process.once("SIGINT", () => void shutdown("SIGINT"));
 async function shutdown(signal: string): Promise<void> {
   if (shuttingDown) return;
   shuttingDown = true;
-  log.info(`ember bridge stopping after ${signal}`);
+  log.info(`patchdoll bridge stopping after ${signal}`);
 
   const forceExit = setTimeout(() => process.exit(1), 5000);
   forceExit.unref();

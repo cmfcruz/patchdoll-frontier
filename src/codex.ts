@@ -26,9 +26,9 @@ function buildCodexArgs(settings: CodexSettings, model: string | undefined, last
     args.push("--config", `model_reasoning_effort="${settings.reasoningEffort}"`);
   }
 
-  // Expose the Ember MCP server (the GitHub access tool) to Codex. A bare `url`
+  // Expose the Patchdoll MCP server (the GitHub access tool) to Codex. A bare `url`
   // makes Codex use its streamable-HTTP MCP client automatically.
-  args.push("--config", `mcp_servers.ember.url="${mcpUrl}"`);
+  args.push("--config", `mcp_servers.patchdoll.url="${mcpUrl}"`);
 
   args.push(
     "--config",
@@ -47,7 +47,7 @@ function buildCodexArgs(settings: CodexSettings, model: string | undefined, last
 
 export async function runCodex({ prompt, cwd, model, onProgress }: AgentRunRequest): Promise<AgentRunResult> {
   const runId = randomUUID();
-  const tempDir = await mkdtemp(`${tmpdir()}/ember-${runId}-`);
+  const tempDir = await mkdtemp(`${tmpdir()}/patchdoll-${runId}-`);
   const lastMessagePath = `${tempDir}/last-message.txt`;
   const args = buildCodexArgs(codexSettings, model, lastMessagePath);
 

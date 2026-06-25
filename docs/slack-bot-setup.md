@@ -1,18 +1,18 @@
 # Slack bot setup
 
-Short checklist for creating an Ember Slack bot and connecting it to the
+Short checklist for creating an Patchdoll Slack bot and connecting it to the
 container.
 
 ## 1. Create the Slack app
 
 1. Go to <https://api.slack.com/apps>.
 2. Create a new app from scratch.
-3. Pick the workspace that should run Ember.
+3. Pick the workspace that should run Patchdoll.
 4. In **Basic Information**, set the display name/icon however you want.
 
 ## 2. Enable Socket Mode
 
-Ember uses Slack Socket Mode, so it does not need a public webhook URL.
+Patchdoll uses Slack Socket Mode, so it does not need a public webhook URL.
 
 1. Open **Socket Mode**.
 2. Enable Socket Mode.
@@ -27,7 +27,7 @@ It should look like `xapp-...`.
 
 Open **OAuth & Permissions** and add these bot token scopes:
 
-- `app_mentions:read` — receive `@ember` mentions
+- `app_mentions:read` — receive `@patchdoll` mentions
 - `chat:write` — post replies
 - `channels:history` — read public channel thread context
 - `groups:history` — read private channel thread context
@@ -55,12 +55,12 @@ Open **Event Subscriptions**.
 
 ## 5. Pick an image variant
 
-Each Ember image ships exactly one agent — there is no default and no combined
+Each Patchdoll image ships exactly one agent — there is no default and no combined
 image. Choose the provider by selecting the matching tag:
 
 ```text
-ghcr.io/cmfcruz/ember:latest-codex    # runs Codex CLI
-ghcr.io/cmfcruz/ember:latest-claude   # runs Claude Code
+ghcr.io/cmfcruz/patchdoll:latest-codex    # runs Codex CLI
+ghcr.io/cmfcruz/patchdoll:latest-claude   # runs Claude Code
 ```
 
 The variant bakes `PROVIDER` into the image; you do not set it yourself.
@@ -83,17 +83,17 @@ bridge starts.
 
 ### Codex variant
 
-Ember runs `codex login` during container startup.
+Patchdoll runs `codex login` during container startup.
 
 For browser/device-code auth, do not set `OPENAI_API_KEY`. Watch the
 container logs, open the printed URL, and enter the device code. The login
 state persists under:
 
 ```text
-/home/ember/.codex
+/home/patchdoll/.codex
 ```
 
-Because `ember-home:/home/ember` is a persistent volume, later restarts reuse
+Because `patchdoll-home:/home/patchdoll` is a persistent volume, later restarts reuse
 the login.
 
 For noninteractive API-key auth instead, set this as a balena secret/env var:
@@ -117,7 +117,7 @@ ANTHROPIC_API_KEY=...         # Anthropic API key
 For channel mentions, invite the bot into each channel where it should respond:
 
 ```text
-/invite @ember-daemon
+/invite @patchdoll-daemon
 ```
 
 Direct messages should work once `message.im` is subscribed and the app is

@@ -1,11 +1,11 @@
-# Ember runtime boundary
+# Patchdoll runtime boundary
 
-Ember's HTTP bridge is a local control plane for the agent, not a public API.
+Patchdoll's HTTP bridge is a local control plane for the agent, not a public API.
 
 The server exists so Slack can invoke the agent (Codex or Claude Code, depending
-on the image variant) and so the agent can consume Ember-only features through
+on the image variant) and so the agent can consume Patchdoll-only features through
 loopback endpoints, namely temporary GitHub credentials. It is intended to be
-Ember's exclusive window to external systems from inside the runtime.
+Patchdoll's exclusive window to external systems from inside the runtime.
 
 This build is configured by environment variables only. `GET /settings` reports
 the resolved configuration read-only; there is no endpoint or tool to mutate it
@@ -28,7 +28,7 @@ layer before exposing `/settings`, `/mcp`, `/agent`, or `/github/credential`.
 ## Threat model
 
 The current design assumes a trusted, single-user runtime where local processes
-already have the same practical authority as Ember and the agent. Under that model,
+already have the same practical authority as Patchdoll and the agent. Under that model,
 the bridge endpoints are privileged local integration points rather than remote
 service boundaries.
 

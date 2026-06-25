@@ -2,7 +2,7 @@
 set -euo pipefail
 
 log() {
-  printf 'ember-entrypoint: %s\n' "$*" >&2
+  printf 'patchdoll-entrypoint: %s\n' "$*" >&2
 }
 
 # Authenticate Codex: an env credential wins, otherwise fall back to device-code.

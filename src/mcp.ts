@@ -1,7 +1,7 @@
 // Minimal MCP (Model Context Protocol) server exposed over streamable HTTP.
 //
 // The active agent (Codex or Claude Code) connects to this endpoint to discover
-// and call `ember_enable_github`. This build is configured by environment
+// and call `patchdoll_enable_github`. This build is configured by environment
 // variables only, so there are no settings tools — the GitHub access tool is the
 // sole tool we expose. We implement just the slice of the protocol the clients
 // exercise: `initialize`, `tools/list`, `tools/call`, and the handshake
@@ -37,10 +37,10 @@ export type McpHttpResponse = {
   body?: Record<string, unknown>;
 };
 
-const serverInfo = { name: "ember-bridge", version: "0.0.0" };
+const serverInfo = { name: "patchdoll-bridge", version: "0.0.0" };
 
 const githubTool = {
-  name: "ember_enable_github",
+  name: "patchdoll_enable_github",
   description:
     "Enable GitHub access for git. Call this once before committing or pushing to github.com; it configures the bot's git identity and a credential helper so normal git commands work. The token is never returned to you.",
   inputSchema: { type: "object", properties: {}, additionalProperties: false }
@@ -89,7 +89,7 @@ async function callTool(id: JsonRpcId, params: JsonRpcRequest["params"]): Promis
   const name = params?.name;
 
   try {
-    if (name === "ember_enable_github") {
+    if (name === "patchdoll_enable_github") {
       return jsonRpcResult(id, toolText(await enableGithubAccess()));
     }
     return jsonRpcError(id, -32602, `unknown tool: ${name ?? "(none)"}`);

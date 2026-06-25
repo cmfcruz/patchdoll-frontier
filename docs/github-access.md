@@ -1,13 +1,13 @@
 # GitHub access for Codex
 
-Ember can let Codex push to GitHub **on demand** without ever exposing a token
+Patchdoll can let Codex push to GitHub **on demand** without ever exposing a token
 to the model.
 
 ## How it works
 
-1. Codex calls the `ember_enable_github` MCP tool (the bridge exposes it). This
+1. Codex calls the `patchdoll_enable_github` MCP tool (the bridge exposes it). This
    installs a git credential helper and a commit identity under
-   `$HOME/.ember` / `$HOME/.gitconfig`.
+   `$HOME/.patchdoll` / `$HOME/.gitconfig`.
 2. When Codex later runs `git push`, git invokes that helper, which makes a
    loopback request to the bridge's `GET /github/credential` endpoint.
 3. The bridge mints (or reuses, for 30 minutes) a short-lived **GitHub App
@@ -15,7 +15,7 @@ to the model.
 
 The token is never returned to the model, so it can't leak into the transcript,
 a Slack reply, or `.git/config`. Because `$HOME` is a persistent volume, the
-helper survives restarts — Codex only needs to call `ember_enable_github` once.
+helper survives restarts — Codex only needs to call `patchdoll_enable_github` once.
 
 ## Configuration
 
@@ -44,7 +44,7 @@ name:  <app-slug>[bot]
 email: <bot-user-id>+<app-slug>[bot]@users.noreply.github.com
 ```
 
-The bridge resolves this during `ember_enable_github` via `GET /app` (for the
+The bridge resolves this during `patchdoll_enable_github` via `GET /app` (for the
 slug) and `GET /users/<slug>[bot]` (for the id). Set either variable to override:
 
 ```text
@@ -53,7 +53,7 @@ GIT_USER_EMAIL=...
 ```
 
 The App's installation permissions (e.g. Contents: read & write) determine what
-Codex can do. If the `GITHUB_APP_*` variables are unset, `ember_enable_github`
+Codex can do. If the `GITHUB_APP_*` variables are unset, `patchdoll_enable_github`
 returns an error and Codex simply runs without GitHub access.
 
 ## Security note

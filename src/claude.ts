@@ -6,7 +6,7 @@
 // The CLI flags match cmfcruz/patchdoll's Claude provider: a headless `-p`
 // stream-json run with `--permission-mode bypassPermissions` (the only mode
 // that never pauses for interactive approval). We additionally point Claude at
-// the Ember MCP server (the GitHub access tool) via `--mcp-config`.
+// the Patchdoll MCP server (the GitHub access tool) via `--mcp-config`.
 //
 // Configuration is env-only (see config.ts): no mutable settings, no settings
 // tools — `claudeSettings` is resolved once at startup.
@@ -44,9 +44,9 @@ function buildClaudeArgs(settings: ClaudeSettings, model: string | undefined, pr
     // Headless runs can never answer an interactive picker.
     "--disallowedTools",
     "AskUserQuestion",
-    // Expose the Ember MCP server (the GitHub access tool) over streamable HTTP.
+    // Expose the Patchdoll MCP server (the GitHub access tool) over streamable HTTP.
     "--mcp-config",
-    JSON.stringify({ mcpServers: { ember: { type: "http", url: mcpUrl } } })
+    JSON.stringify({ mcpServers: { patchdoll: { type: "http", url: mcpUrl } } })
   ];
 
   if (modelArg) {

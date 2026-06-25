@@ -35,7 +35,7 @@ export const port = Number.parseInt(process.env.PORT ?? "3000", 10);
 // --- Workspace + shared agent plumbing ---
 export const workspace = resolve("/workspace");
 
-// URL the agent uses to reach the Ember MCP server we expose from this same
+// URL the agent uses to reach the Patchdoll MCP server we expose from this same
 // process (the GitHub access tool).
 export const mcpUrl = `http://127.0.0.1:${port}/mcp`;
 
@@ -81,7 +81,7 @@ export type ClaudeSettings = {
 
 const validClaudeEfforts = new Set<ClaudeEffort>(["low", "medium", "high", "xhigh", "max"]);
 
-// Resolved once from the environment, with the same defaults Ember shipped:
+// Resolved once from the environment, with the same defaults Patchdoll shipped:
 // model `sonnet`, effort `high`.
 export const claudeSettings: ClaudeSettings = tidy({
   model: process.env.CLAUDE_MODEL?.trim() || "sonnet",
@@ -89,7 +89,7 @@ export const claudeSettings: ClaudeSettings = tidy({
 });
 
 // --- GitHub App (on-demand token for `git push`) ---
-// When all three are set, the agent can call the `ember_enable_github` MCP tool
+// When all three are set, the agent can call the `patchdoll_enable_github` MCP tool
 // to wire up a git credential helper that fetches a short-lived installation
 // token from this bridge on demand. The token is never handed to the model.
 export const githubAppId = process.env.GITHUB_APP_ID;
@@ -102,7 +102,7 @@ export const gitUserNameOverride = process.env.GIT_USER_NAME;
 export const gitUserEmailOverride = process.env.GIT_USER_EMAIL;
 
 // Home directory the agent runs under; the credential helper + git config live here.
-export const emberHome = process.env.HOME ?? homedir();
+export const patchdollHome = process.env.HOME ?? homedir();
 
 // --- Slack ---
 export const slackBotToken = process.env.SLACK_BOT_TOKEN;

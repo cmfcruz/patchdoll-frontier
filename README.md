@@ -5,7 +5,7 @@ It listens for Slack @mentions and DMs (and a loopback HTTP `/agent` endpoint),
 runs the configured agent against the `/workspace` tree, and streams the result
 back into Slack.
 
-This is the env-only frontier rebuild of the Ember bridge: **all configuration
+This is the env-only frontier rebuild of the Patchdoll bridge: **all configuration
 comes from environment variables**. There is no settings file and no runtime
 mutation — to change the model or effort, restart with different env vars.
 
@@ -22,7 +22,7 @@ branches on the provider at runtime beyond a single seam.
 | `codex.ts`   | Builds and runs `codex exec`; maps its `--json` events to progress notes. |
 | `claude.ts`  | Builds and runs `claude` (`stream-json`); maps its events to progress notes. |
 | `stream.ts`  | Shared NDJSON line buffering used by both providers. |
-| `mcp.ts`     | Minimal MCP server exposing the single `ember_enable_github` tool. |
+| `mcp.ts`     | Minimal MCP server exposing the single `patchdoll_enable_github` tool. |
 | `github.ts`  | On-demand GitHub App installation token + git credential helper. |
 | `prompt.ts`  | The agent preamble — the policy/context handed to the model. |
 | `slack.ts`   | Slack adapter and the throttled-edit / chunked-reply delivery model. |
@@ -51,7 +51,7 @@ Logging: `LOG_LEVEL` (`error|warn|info|debug`, default `info`).
 Slack (enables the adapter when both are set): `SLACK_BOT_TOKEN`,
 `SLACK_APP_TOKEN`. See [docs/slack-bot-setup.md](docs/slack-bot-setup.md).
 
-GitHub access (enables `ember_enable_github` when all three are set):
+GitHub access (enables `patchdoll_enable_github` when all three are set):
 `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`,
 `GITHUB_APP_PRIVATE_KEY_BASE64`. Optional commit identity overrides:
 `GIT_USER_NAME`, `GIT_USER_EMAIL`. See

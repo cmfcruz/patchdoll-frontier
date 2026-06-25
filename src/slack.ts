@@ -53,7 +53,7 @@ type SlackThreadContext = {
 
 const initialProgressText = "hmm?";
 const requestFailurePrefix = "That's annoying, but manageable";
-const fallbackReply = "Ember handled the request.";
+const fallbackReply = "Patchdoll handled the request.";
 
 // Control characters Slack rejects. The "keep newlines" variant preserves tab
 // and newline so final replies keep their formatting; the strict variant strips
