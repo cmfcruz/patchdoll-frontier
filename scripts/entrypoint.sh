@@ -2,7 +2,7 @@
 set -euo pipefail
 
 log() {
-  printf 'patchdoll-entrypoint: %s\n' "$*" >&2
+  printf 'entrypoint: %s\n' "$*" >&2
 }
 
 agent_env() {
@@ -29,12 +29,12 @@ prepare_runtime_dirs() {
   fi
 
   if [ ! -w /home/agent ]; then
-    log "/home/agent is not writable by patchdoll-bridge; fix image ownership or permissions before starting"
+    log "/home/agent is not writable by patchdoll; fix image ownership or permissions before starting"
     exit 1
   fi
 
   if [ ! -w /workspace ]; then
-    log "/workspace is not writable by patchdoll-bridge; fix the volume ownership or permissions before starting"
+    log "/workspace is not writable by patchdoll; fix the volume ownership or permissions before starting"
     exit 1
   fi
 }

@@ -37,7 +37,7 @@ export type McpHttpResponse = {
   body?: Record<string, unknown>;
 };
 
-const serverInfo = { name: "patchdoll-bridge", version: "0.0.0" };
+const serverInfo = { name: "patchdoll", version: "0.0.0" };
 
 const githubTool = {
   name: "patchdoll_enable_github",

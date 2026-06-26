@@ -148,7 +148,7 @@ async function githubRequest(method: string, path: string, authorization: string
       accept: "application/vnd.github+json",
       authorization,
       "x-github-api-version": GITHUB_API_VERSION,
-      "user-agent": "patchdoll-bridge"
+      "user-agent": "patchdoll"
     }
   });
 

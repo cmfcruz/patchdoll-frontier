@@ -91,33 +91,32 @@ RUN set -eux; \
   apt-get install -y --no-install-recommends ca-certificates git tini; \
   rm -rf /var/lib/apt/lists/*; \
   groupadd --system patchdoll; \
-  groupadd --system patchdoll-bridge; \
   groupadd --system agent; \
-  useradd --system --create-home --home-dir /home/patchdoll-bridge --gid patchdoll-bridge --groups patchdoll patchdoll-bridge; \
+  useradd --system --create-home --home-dir /home/patchdoll --gid patchdoll patchdoll; \
   useradd --system --create-home --home-dir /home/agent --gid agent --groups patchdoll agent; \
   mkdir -p /workspace; \
-  chown -R patchdoll-bridge:patchdoll /app /workspace /home/patchdoll-bridge; \
+  chown -R patchdoll:patchdoll /app /workspace /home/patchdoll; \
   chown -R agent:patchdoll /home/agent; \
-  chmod 0755 /home/patchdoll-bridge; \
+  chmod 0755 /home/patchdoll; \
   chmod 0770 /home/agent /workspace
 
-COPY --from=prod-deps --chown=patchdoll-bridge:patchdoll-bridge /app/package*.json ./
-COPY --from=prod-deps --chown=patchdoll-bridge:patchdoll-bridge /app/node_modules ./node_modules
-COPY --from=build --chown=patchdoll-bridge:patchdoll-bridge /app/dist ./dist
-COPY --chown=root:root scripts/entrypoint.sh /usr/local/bin/patchdoll-entrypoint
-RUN chmod 0555 /usr/local/bin/patchdoll-entrypoint
+COPY --from=prod-deps --chown=patchdoll:patchdoll /app/package*.json ./
+COPY --from=prod-deps --chown=patchdoll:patchdoll /app/node_modules ./node_modules
+COPY --from=build --chown=patchdoll:patchdoll /app/dist ./dist
+COPY --chown=root:root scripts/entrypoint.sh /usr/local/bin/entrypoint
+RUN chmod 0555 /usr/local/bin/entrypoint
 
 # Bake the provider into the image as the single source of truth. config.ts and
 # the entrypoint read PROVIDER; there is no runtime override.
 # DISABLE_AUTOUPDATER keeps the Claude Code CLI from self-updating (no-op for Codex).
 ENV PATH="/app/node_modules/.bin:${PATH}" \
-  HOME=/home/patchdoll-bridge \
+  HOME=/home/patchdoll \
   HOST=127.0.0.1 \
   PORT=3000 \
   PROVIDER=${PROVIDER_VARIANT} \
   DISABLE_AUTOUPDATER=1
 
 EXPOSE 3000
-USER patchdoll-bridge
-ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/patchdoll-entrypoint"]
+USER patchdoll
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/entrypoint"]
 CMD ["node", "dist/bridge.js"]

@@ -9,7 +9,7 @@ Patchdoll's exclusive window to external systems from inside the runtime.
 
 ## Unix user model
 
-The container runs as the non-root `patchdoll-bridge` user. The image also
+The container runs as the non-root `patchdoll` user. The image also
 creates an `agent` user with home directory `/home/agent` for provider auth and
 state. There are no sudo rules and no runtime privilege-escalation path in the
 image.
