@@ -36,7 +36,7 @@ base64 -w0 your-app.private-key.pem
 
 ### Commit identity
 
-By default the commit identity is derived from the GitHub App's bot account, so
+The commit identity is always derived from the GitHub App's bot account, so
 commits attribute correctly (the same scheme GitHub Actions uses):
 
 ```text
@@ -46,6 +46,9 @@ email: <bot-user-id>+<app-slug>[bot]@users.noreply.github.com
 
 The bridge resolves this during `patchdoll_enable_github` via `GET /app` (for the
 slug) and `GET /users/<slug>[bot]` (for the id).
+
+There are no environment variables or runtime settings for overriding the git
+user name or email.
 
 The App's installation permissions (e.g. Contents: read & write) determine what
 Codex can do. If the `GITHUB_APP_*` variables are unset, `patchdoll_enable_github`
