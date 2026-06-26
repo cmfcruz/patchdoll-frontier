@@ -6,8 +6,13 @@ log() {
 }
 
 agent_env() {
+  # CODEX_HOME must match the bridge's codexAgentEnv() (src/config.ts) so the
+  # credentials `codex login` writes here are found by `codex exec` later. Without
+  # it, login would use Codex's default $HOME/.codex while the bridge reads
+  # /home/agent directly, and runs would fail unauthenticated.
   env -i \
     HOME=/home/agent \
+    CODEX_HOME=/home/agent \
     USER=agent \
     LOGNAME=agent \
     PATH=/app/node_modules/.bin:/usr/local/bin:/usr/bin:/bin \
