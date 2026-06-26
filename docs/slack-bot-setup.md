@@ -59,8 +59,8 @@ Each Patchdoll image ships exactly one agent — there is no default and no comb
 image. Choose the provider by selecting the matching tag:
 
 ```text
-ghcr.io/cmfcruz/patchdoll:latest-codex    # runs Codex CLI
-ghcr.io/cmfcruz/patchdoll:latest-claude   # runs Claude Code
+ghcr.io/stabledaemons/patchdoll:latest-codex    # runs Codex CLI
+ghcr.io/stabledaemons/patchdoll:latest-claude   # runs Claude Code
 ```
 
 The variant bakes `PROVIDER` into the image; you do not set it yourself.

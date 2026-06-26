@@ -3,7 +3,7 @@
 // progress notes plus a final message. Mirrors codex.ts — the two are
 // interchangeable image variants selected by PROVIDER.
 //
-// The CLI flags match cmfcruz/patchdoll's Claude provider: a headless `-p`
+// The CLI flags match stabledaemons/patchdoll's Claude provider: a headless `-p`
 // stream-json run with `--permission-mode bypassPermissions` (the only mode
 // that never pauses for interactive approval). We additionally point Claude at
 // the Patchdoll MCP server (the GitHub access tool) via `--mcp-config`.

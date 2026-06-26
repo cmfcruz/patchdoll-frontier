@@ -84,7 +84,7 @@ export const codexSettings: CodexSettings = tidy({
 });
 
 // --- Claude Code ---
-// The CLI flags match cmfcruz/patchdoll's Claude provider: headless `-p`
+// The CLI flags match stabledaemons/patchdoll's Claude provider: headless `-p`
 // stream-json with bypassPermissions (the only mode that never pauses for
 // interactive approval in a non-interactive run).
 export const claudeBin = "claude";

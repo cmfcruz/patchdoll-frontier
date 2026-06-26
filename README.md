@@ -1,4 +1,4 @@
-# patchdoll-frontier
+# patchdoll
 
 A tiny communications bridge that runs **Codex** or **Claude Code** on request.
 It listens for Slack @mentions and DMs (and a loopback HTTP `/agent` endpoint),
