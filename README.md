@@ -19,7 +19,6 @@ branches on the provider at runtime beyond a single seam.
 | `bridge.ts`  | HTTP entry point: `/health`, read-only `/settings`, `/mcp`, `/github/credential`, `/agent`, plus startup/shutdown. |
 | `agent.ts`   | The small `AgentProvider` interface and the active provider. The bridge, Slack, and MCP only talk to `agent`. |
 | `config.ts`  | All environment-derived configuration, resolved once. The only module that reads `process.env`. |
-| `agentProcess.ts` | Launches provider commands through the restricted `agent` Unix user. |
 | `codex.ts`   | Builds and runs `codex exec` with a scrubbed agent environment; maps its `--json` events to progress notes. |
 | `claude.ts`  | Builds and runs `claude` (`stream-json`) with a scrubbed agent environment; maps its events to progress notes. |
 | `stream.ts`  | Shared NDJSON line buffering used by both providers. |
@@ -59,7 +58,7 @@ GitHub access (enables `patchdoll_enable_github` when all three are set):
 Agent credentials:
 
 - Codex: `OPENAI_API_KEY` is consumed by `scripts/entrypoint.sh` to log in the
-  `agent` user, then normal runs use `/home/agent` state instead of inheriting
+  provider home, then normal runs use `/home/agent` state instead of inheriting
   the key.
 - Claude: `CLAUDE_CODE_OAUTH_TOKEN` / `ANTHROPIC_API_KEY` are passed only to the
   Claude process because Claude Code needs them at run time unless stored auth is

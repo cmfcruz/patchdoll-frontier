@@ -10,7 +10,6 @@ import { randomUUID } from "node:crypto";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 
-import { agentCommand } from "./agentProcess.js";
 import { codexAgentEnv, codexBin, codexSettings, codexTimeoutMs, mcpUrl, type CodexSettings } from "./config.js";
 import { log } from "./log.js";
 import { createLineParser, parseJsonObject } from "./stream.js";
@@ -63,8 +62,7 @@ export async function runCodex({ prompt, cwd, model, onProgress }: AgentRunReque
   });
 
   try {
-    const command = agentCommand(codexBin, args);
-    const child = spawn(command.command, command.args, {
+    const child = spawn(codexBin, args, {
       cwd,
       env: codexAgentEnv(),
       stdio: ["pipe", "pipe", "pipe"]

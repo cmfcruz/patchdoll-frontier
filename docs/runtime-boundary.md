@@ -9,9 +9,8 @@ Patchdoll's exclusive window to external systems from inside the runtime.
 
 ## Unix user model
 
-The long-lived bridge runs as `patchdoll-bridge`. Provider commands run as the
-separate `agent` user through `/usr/local/bin/patchdoll-agent-run`, and sudo is
-limited to that wrapper instead of granting broad passwordless root access.
+The container runs as the non-root `patchdoll-bridge` user. There are no sudo
+rules and no runtime privilege-escalation path in the image.
 
 The provider spawn boundary passes an explicit environment whitelist. Slack and
 GitHub App secrets stay in the bridge environment and are not inherited by Codex,
@@ -39,7 +38,7 @@ layer before exposing `/settings`, `/mcp`, `/agent`, or `/github/credential`.
 
 ## Threat model
 
-The bridge and agent are separated so normal agent commands do not inherit bridge
-secrets or broad sudo privileges. The loopback endpoints are still privileged
-local integration points: they should stay bound to loopback unless an explicit
-authentication and authorization layer is added first.
+Normal agent commands do not inherit bridge secrets or sudo privileges. The
+loopback endpoints are still privileged local integration points: they should
+stay bound to loopback unless an explicit authentication and authorization layer
+is added first.

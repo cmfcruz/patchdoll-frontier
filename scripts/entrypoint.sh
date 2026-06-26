@@ -17,21 +17,16 @@ agent_env() {
 }
 
 run_as_agent() {
-  agent_env /usr/bin/sudo -E -H -u agent -- /usr/local/bin/patchdoll-agent-run "$@"
+  agent_env "$@"
 }
 
 prepare_runtime_dirs() {
   mkdir -p /workspace /home/agent /home/patchdoll-bridge
-  chown -R agent:patchdoll-ipc /home/agent
   chmod 0700 /home/agent
-  chown -R patchdoll-bridge:patchdoll-bridge /home/patchdoll-bridge
   chmod 0755 /home/patchdoll-bridge
 
-  if chown -R agent:patchdoll-ipc /workspace; then
-    find /workspace -type d -exec chmod u+rwx,g+rx,g+s,o-rwx {} +
-    find /workspace -type f -exec chmod u+rw,g+r,o-rwx {} +
-  else
-    log "unable to prepare /workspace; Patchdoll requires CAP_CHOWN for the persistent workspace mount"
+  if [ ! -w /workspace ]; then
+    log "/workspace is not writable by patchdoll-bridge; fix the volume ownership or permissions before starting"
     exit 1
   fi
 }
@@ -77,4 +72,4 @@ case "$provider" in
     ;;
 esac
 
-exec /usr/bin/sudo -E -H -u patchdoll-bridge -- "$@"
+exec "$@"

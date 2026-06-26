@@ -7,7 +7,7 @@ to the model.
 
 1. Codex calls the `patchdoll_enable_github` MCP tool (the bridge exposes it). This
    installs a bridge-owned git credential helper and writes the commit identity
-   to the `agent` user's global git config.
+   to the provider home global git config.
 2. When Codex later runs `git push`, git invokes that helper, which makes a
    loopback request to the bridge's `GET /github/credential` endpoint.
 3. The bridge mints (or reuses, for 30 minutes) a short-lived **GitHub App

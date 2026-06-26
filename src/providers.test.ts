@@ -2,7 +2,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import { progressNoteFromEvent } from "./codex.js";
-import { agentCommand } from "./agentProcess.js";
 import { messageFromResult, toolNote } from "./claude.js";
 
 test("progressNoteFromEvent maps Codex item.completed events to notes", () => {
@@ -43,11 +42,4 @@ test("messageFromResult extracts the result string, tolerating bad input", () =>
   assert.equal(messageFromResult(JSON.stringify({ type: "result" })), "");
   assert.equal(messageFromResult("not json"), "");
   assert.equal(messageFromResult(""), "");
-});
-
-test("agentCommand launches provider commands through the agent wrapper", () => {
-  assert.deepEqual(agentCommand("codex", ["exec", "--json"]), {
-    command: "/usr/bin/sudo",
-    args: ["-E", "-H", "-u", "agent", "--", "/usr/local/bin/patchdoll-agent-run", "codex", "exec", "--json"]
-  });
 });

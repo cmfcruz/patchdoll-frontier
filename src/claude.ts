@@ -23,7 +23,6 @@ import {
   mcpUrl,
   type ClaudeSettings
 } from "./config.js";
-import { agentCommand } from "./agentProcess.js";
 import { log } from "./log.js";
 import { createLineParser, parseJsonObject } from "./stream.js";
 import type { AgentProvider, AgentRunRequest, AgentRunResult, ProgressNote } from "./agent.js";
@@ -74,8 +73,7 @@ export async function runClaude({ prompt, cwd, model, onProgress }: AgentRunRequ
     prompt: prompt.length > 2000 ? `${prompt.slice(0, 2000)}…[+${prompt.length - 2000} chars]` : prompt
   });
 
-  const command = agentCommand(claudeBin, args);
-  const child = spawn(command.command, command.args, {
+  const child = spawn(claudeBin, args, {
     cwd,
     env: claudeAgentEnv(),
     stdio: ["ignore", "pipe", "pipe"]

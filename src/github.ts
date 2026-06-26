@@ -28,7 +28,6 @@ import {
   githubPrivateKeyBase64,
   port
 } from "./config.js";
-import { agentCommand } from "./agentProcess.js";
 
 const GITHUB_API_URL = "https://api.github.com";
 const GITHUB_API_VERSION = "2022-11-28";
@@ -204,8 +203,7 @@ require("node:http")
 
 function gitConfig(key: string, value: string): Promise<void> {
   return new Promise((resolveConfig, reject) => {
-    const command = agentCommand("git", ["config", "--global", key, value]);
-    const child = spawn(command.command, command.args, {
+    const child = spawn("git", ["config", "--global", key, value], {
       env: gitAgentEnv(),
       stdio: "ignore"
     });

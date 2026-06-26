@@ -42,10 +42,7 @@ export const logLevel: LogLevel = parseEnum("LOG_LEVEL", process.env.LOG_LEVEL, 
 
 // --- Workspace + shared agent plumbing ---
 export const workspace = resolve("/workspace");
-export const agentUser = "agent";
 export const agentHome = "/home/agent";
-export const agentRunner = "/usr/local/bin/patchdoll-agent-run";
-export const sudoBin = "/usr/bin/sudo";
 export const agentPath = "/app/node_modules/.bin:/usr/local/bin:/usr/bin:/bin";
 const agentTerm = process.env.TERM?.trim() || "xterm-256color";
 
@@ -204,8 +201,8 @@ function parseIntegerEnv(
 function baseAgentEnv(extra: Record<string, string | undefined>): NodeJS.ProcessEnv {
   return tidy({
     HOME: agentHome,
-    USER: agentUser,
-    LOGNAME: agentUser,
+    USER: "patchdoll-bridge",
+    LOGNAME: "patchdoll-bridge",
     PATH: agentPath,
     TERM: agentTerm,
     DISABLE_AUTOUPDATER: "1",
