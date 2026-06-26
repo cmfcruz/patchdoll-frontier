@@ -15,6 +15,7 @@ import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 
 import {
+  claudeAgentEnv,
   claudeBin,
   claudePermissionMode,
   claudeSettings,
@@ -22,6 +23,7 @@ import {
   mcpUrl,
   type ClaudeSettings
 } from "./config.js";
+import { agentCommand } from "./agentProcess.js";
 import { log } from "./log.js";
 import { createLineParser, parseJsonObject } from "./stream.js";
 import type { AgentProvider, AgentRunRequest, AgentRunResult, ProgressNote } from "./agent.js";
@@ -72,9 +74,10 @@ export async function runClaude({ prompt, cwd, model, onProgress }: AgentRunRequ
     prompt: prompt.length > 2000 ? `${prompt.slice(0, 2000)}…[+${prompt.length - 2000} chars]` : prompt
   });
 
-  const child = spawn(claudeBin, args, {
+  const command = agentCommand(claudeBin, args);
+  const child = spawn(command.command, command.args, {
     cwd,
-    env: process.env,
+    env: claudeAgentEnv(),
     stdio: ["ignore", "pipe", "pipe"]
   });
 

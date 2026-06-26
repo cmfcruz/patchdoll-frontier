@@ -42,6 +42,12 @@ export const logLevel: LogLevel = parseEnum("LOG_LEVEL", process.env.LOG_LEVEL, 
 
 // --- Workspace + shared agent plumbing ---
 export const workspace = resolve("/workspace");
+export const agentUser = "agent";
+export const agentHome = "/home/agent";
+export const agentRunner = "/usr/local/bin/patchdoll-agent-run";
+export const sudoBin = "/usr/bin/sudo";
+export const agentPath = "/app/node_modules/.bin:/usr/local/bin:/usr/bin:/bin";
+const agentTerm = process.env.TERM?.trim() || "xterm-256color";
 
 // URL the agent uses to reach the Patchdoll MCP server we expose from this same
 // process (the GitHub access tool). Always loopback — the MCP endpoint is a
@@ -110,6 +116,8 @@ export const claudeSettings: ClaudeSettings = tidy({
   model: process.env.CLAUDE_MODEL?.trim() || "sonnet",
   effort: parseEnum("CLAUDE_EFFORT", process.env.CLAUDE_EFFORT, validClaudeEfforts, "high")
 });
+const claudeCodeOauthToken = process.env.CLAUDE_CODE_OAUTH_TOKEN?.trim() || undefined;
+const anthropicApiKey = process.env.ANTHROPIC_API_KEY?.trim() || undefined;
 
 // --- GitHub App (on-demand token for `git push`) ---
 // When all three are set, the agent can call the `patchdoll_enable_github` MCP tool
@@ -119,8 +127,8 @@ export const githubAppId = process.env.GITHUB_APP_ID;
 export const githubInstallationId = process.env.GITHUB_APP_INSTALLATION_ID;
 export const githubPrivateKeyBase64 = process.env.GITHUB_APP_PRIVATE_KEY_BASE64;
 
-// Home directory the agent runs under; the credential helper + git config live here.
-export const patchdollHome = process.env.HOME ?? homedir();
+// Home directory the bridge runs under; bridge-owned helpers live here.
+export const bridgeHome = process.env.HOME ?? homedir();
 
 // --- Slack ---
 export const slackBotToken = process.env.SLACK_BOT_TOKEN?.trim() || undefined;
@@ -152,6 +160,21 @@ export function missingGithubEnvVars(): string[] {
   return missing;
 }
 
+export function codexAgentEnv(): NodeJS.ProcessEnv {
+  return baseAgentEnv({ CODEX_HOME: agentHome });
+}
+
+export function claudeAgentEnv(): NodeJS.ProcessEnv {
+  return baseAgentEnv({
+    CLAUDE_CODE_OAUTH_TOKEN: claudeCodeOauthToken,
+    ANTHROPIC_API_KEY: anthropicApiKey
+  });
+}
+
+export function gitAgentEnv(): NodeJS.ProcessEnv {
+  return baseAgentEnv({});
+}
+
 export function messageOf(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
@@ -176,6 +199,18 @@ function parseIntegerEnv(
   }
 
   return parsed;
+}
+
+function baseAgentEnv(extra: Record<string, string | undefined>): NodeJS.ProcessEnv {
+  return tidy({
+    HOME: agentHome,
+    USER: agentUser,
+    LOGNAME: agentUser,
+    PATH: agentPath,
+    TERM: agentTerm,
+    DISABLE_AUTOUPDATER: "1",
+    ...extra
+  });
 }
 
 // Validate an optional enum-valued env var. An unset/blank value uses the

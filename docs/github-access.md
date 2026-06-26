@@ -6,16 +6,17 @@ to the model.
 ## How it works
 
 1. Codex calls the `patchdoll_enable_github` MCP tool (the bridge exposes it). This
-   installs a git credential helper and a commit identity under
-   `$HOME/.patchdoll` / `$HOME/.gitconfig`.
+   installs a bridge-owned git credential helper and writes the commit identity
+   to the `agent` user's global git config.
 2. When Codex later runs `git push`, git invokes that helper, which makes a
    loopback request to the bridge's `GET /github/credential` endpoint.
 3. The bridge mints (or reuses, for 30 minutes) a short-lived **GitHub App
    installation token** and hands it straight to git.
 
 The token is never returned to the model, so it can't leak into the transcript,
-a Slack reply, or `.git/config`. Because `$HOME` is a persistent volume, the
-helper survives restarts — Codex only needs to call `patchdoll_enable_github` once.
+a Slack reply, or `.git/config`. Codex only needs to call
+`patchdoll_enable_github` once per container filesystem; after that the agent's
+git config invokes the helper when needed.
 
 ## Configuration
 

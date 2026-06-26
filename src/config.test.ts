@@ -17,7 +17,10 @@ const envKeys = [
   "SLACK_APP_TOKEN",
   "GITHUB_APP_ID",
   "GITHUB_APP_INSTALLATION_ID",
-  "GITHUB_APP_PRIVATE_KEY_BASE64"
+  "GITHUB_APP_PRIVATE_KEY_BASE64",
+  "CLAUDE_CODE_OAUTH_TOKEN",
+  "ANTHROPIC_API_KEY",
+  "TERM"
 ];
 
 let importId = 0;
@@ -53,6 +56,41 @@ test("config uses default numeric env values when unset", async () => {
   assert.equal(config.port, 3000);
   assert.equal(config.codexTimeoutMs, 1800000);
   assert.equal(config.claudeTimeoutMs, 1800000);
+});
+
+test("agent env only includes provider-safe values", async () => {
+  const config = await importConfig({
+    PROVIDER: "codex",
+    SLACK_BOT_TOKEN: "xoxb-secret",
+    SLACK_APP_TOKEN: "xapp-secret",
+    GITHUB_APP_ID: "123",
+    GITHUB_APP_INSTALLATION_ID: "456",
+    GITHUB_APP_PRIVATE_KEY_BASE64: "private-key",
+    CLAUDE_CODE_OAUTH_TOKEN: "claude-oauth",
+    ANTHROPIC_API_KEY: "anthropic-key",
+    TERM: "vt100"
+  });
+
+  assert.deepEqual(config.codexAgentEnv(), {
+    HOME: "/home/agent",
+    USER: "agent",
+    LOGNAME: "agent",
+    PATH: "/app/node_modules/.bin:/usr/local/bin:/usr/bin:/bin",
+    TERM: "vt100",
+    DISABLE_AUTOUPDATER: "1",
+    CODEX_HOME: "/home/agent"
+  });
+
+  assert.deepEqual(config.claudeAgentEnv(), {
+    HOME: "/home/agent",
+    USER: "agent",
+    LOGNAME: "agent",
+    PATH: "/app/node_modules/.bin:/usr/local/bin:/usr/bin:/bin",
+    TERM: "vt100",
+    DISABLE_AUTOUPDATER: "1",
+    CLAUDE_CODE_OAUTH_TOKEN: "claude-oauth",
+    ANTHROPIC_API_KEY: "anthropic-key"
+  });
 });
 
 test("config accepts explicit integer port and timeout env values", async () => {

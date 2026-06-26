@@ -86,36 +86,41 @@ ARG PROVIDER_VARIANT
 
 WORKDIR /app
 
-# Passwordless sudo for the `patchdoll` user is intentional: this image runs
-# on a trusted Pi 4 dev device where Codex uses sudo to debug peripheral
-# integration during development. Development convenience, not for prod.
 RUN set -eux; \
   apt-get update; \
   apt-get install -y --no-install-recommends ca-certificates git sudo tini; \
   rm -rf /var/lib/apt/lists/*; \
-  groupadd --system patchdoll; \
-  useradd --system --create-home --home-dir /home/patchdoll --gid patchdoll patchdoll; \
-  echo 'patchdoll ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/patchdoll-nopasswd; \
-  chmod 0440 /etc/sudoers.d/patchdoll-nopasswd; \
+  groupadd --system patchdoll-bridge; \
+  groupadd --system patchdoll-ipc; \
+  groupadd --system agent; \
+  useradd --system --create-home --home-dir /home/patchdoll-bridge --gid patchdoll-bridge --groups patchdoll-ipc patchdoll-bridge; \
+  useradd --system --create-home --home-dir /home/agent --gid agent --groups patchdoll-ipc agent; \
+  printf '%s\n' 'patchdoll-bridge ALL=(agent) NOPASSWD:SETENV: /usr/local/bin/patchdoll-agent-run' > /etc/sudoers.d/patchdoll-agent-run; \
+  chmod 0440 /etc/sudoers.d/patchdoll-agent-run; \
   mkdir -p /workspace; \
-  chown -R patchdoll:patchdoll /app /workspace
+  chown -R patchdoll-bridge:patchdoll-bridge /app /home/patchdoll-bridge; \
+  chown -R agent:patchdoll-ipc /workspace /home/agent; \
+  chmod 0755 /home/patchdoll-bridge; \
+  chmod 0700 /home/agent; \
+  chmod 2750 /workspace
 
-COPY --from=prod-deps --chown=patchdoll:patchdoll /app/package*.json ./
-COPY --from=prod-deps --chown=patchdoll:patchdoll /app/node_modules ./node_modules
-COPY --from=build --chown=patchdoll:patchdoll /app/dist ./dist
-COPY --chown=patchdoll:patchdoll scripts/entrypoint.sh /usr/local/bin/patchdoll-entrypoint
+COPY --from=prod-deps --chown=patchdoll-bridge:patchdoll-bridge /app/package*.json ./
+COPY --from=prod-deps --chown=patchdoll-bridge:patchdoll-bridge /app/node_modules ./node_modules
+COPY --from=build --chown=patchdoll-bridge:patchdoll-bridge /app/dist ./dist
+COPY --chown=root:root scripts/entrypoint.sh /usr/local/bin/patchdoll-entrypoint
+COPY --chown=root:root scripts/agent-run.sh /usr/local/bin/patchdoll-agent-run
+RUN chmod 0555 /usr/local/bin/patchdoll-entrypoint /usr/local/bin/patchdoll-agent-run
 
 # Bake the provider into the image as the single source of truth. config.ts and
 # the entrypoint read PROVIDER; there is no runtime override.
 # DISABLE_AUTOUPDATER keeps the Claude Code CLI from self-updating (no-op for Codex).
 ENV PATH="/app/node_modules/.bin:${PATH}" \
-  HOME=/home/patchdoll \
+  HOME=/home/patchdoll-bridge \
   HOST=127.0.0.1 \
   PORT=3000 \
   PROVIDER=${PROVIDER_VARIANT} \
   DISABLE_AUTOUPDATER=1
 
 EXPOSE 3000
-USER patchdoll
 ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/patchdoll-entrypoint"]
 CMD ["node", "dist/bridge.js"]

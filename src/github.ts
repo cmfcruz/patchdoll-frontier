@@ -20,13 +20,15 @@ import { chmod, mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 import {
-  patchdollHome,
+  bridgeHome,
+  gitAgentEnv,
   githubAppId,
   githubConfigured,
   githubInstallationId,
   githubPrivateKeyBase64,
   port
 } from "./config.js";
+import { agentCommand } from "./agentProcess.js";
 
 const GITHUB_API_URL = "https://api.github.com";
 const GITHUB_API_VERSION = "2022-11-28";
@@ -35,7 +37,7 @@ const GITHUB_API_VERSION = "2022-11-28";
 // so this leaves comfortable margin while avoiding a mint on every git auth.
 const TOKEN_FRESHNESS_MS = 30 * 60 * 1000;
 
-const helperPath = join(patchdollHome, ".patchdoll", "git-credential-patchdoll.cjs");
+const helperPath = join(bridgeHome, ".patchdoll", "git-credential-patchdoll.cjs");
 
 type GitIdentity = { name: string; email: string };
 
@@ -194,15 +196,17 @@ require("node:http")
   .end();
 `;
 
-  await mkdir(dirname(helperPath), { recursive: true, mode: 0o700 });
-  await writeFile(helperPath, script, { mode: 0o700 });
-  await chmod(helperPath, 0o700);
+  await mkdir(dirname(helperPath), { recursive: true, mode: 0o755 });
+  await chmod(dirname(helperPath), 0o755);
+  await writeFile(helperPath, script, { mode: 0o755 });
+  await chmod(helperPath, 0o755);
 }
 
 function gitConfig(key: string, value: string): Promise<void> {
   return new Promise((resolveConfig, reject) => {
-    const child = spawn("git", ["config", "--global", key, value], {
-      env: { ...process.env, HOME: patchdollHome },
+    const command = agentCommand("git", ["config", "--global", key, value]);
+    const child = spawn(command.command, command.args, {
+      env: gitAgentEnv(),
       stdio: "ignore"
     });
     child.once("error", reject);
