@@ -21,8 +21,6 @@ import { dirname, join } from "node:path";
 
 import {
   patchdollHome,
-  gitUserEmailOverride,
-  gitUserNameOverride,
   githubAppId,
   githubConfigured,
   githubInstallationId,
@@ -70,15 +68,11 @@ export async function enableGithubAccess(): Promise<string> {
 }
 
 /**
- * Resolve the git identity: explicit env overrides win, otherwise derive the
- * GitHub App bot identity (e.g. `my-app[bot]` /
- * `<id>+my-app[bot]@users.noreply.github.com`) so commits attribute correctly.
+ * Resolve the git identity from the GitHub App bot account (e.g.
+ * `my-app[bot]` / `<id>+my-app[bot]@users.noreply.github.com`) so commits
+ * attribute correctly.
  */
 async function resolveGitIdentity(token: string): Promise<GitIdentity> {
-  if (gitUserNameOverride && gitUserEmailOverride) {
-    return { name: gitUserNameOverride, email: gitUserEmailOverride };
-  }
-
   if (!cachedIdentity) {
     const slug = await fetchAppSlug();
     const login = `${slug}[bot]`;
@@ -86,10 +80,7 @@ async function resolveGitIdentity(token: string): Promise<GitIdentity> {
     cachedIdentity = { name: login, email: `${userId}+${login}@users.noreply.github.com` };
   }
 
-  return {
-    name: gitUserNameOverride ?? cachedIdentity.name,
-    email: gitUserEmailOverride ?? cachedIdentity.email
-  };
+  return cachedIdentity;
 }
 
 async function fetchAppSlug(): Promise<string> {

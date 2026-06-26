@@ -119,11 +119,6 @@ export const githubAppId = process.env.GITHUB_APP_ID;
 export const githubInstallationId = process.env.GITHUB_APP_INSTALLATION_ID;
 export const githubPrivateKeyBase64 = process.env.GITHUB_APP_PRIVATE_KEY_BASE64;
 
-// Identity used for commits the agent makes. When unset, it is derived from the
-// GitHub App's bot account so commits attribute correctly; these only override.
-export const gitUserNameOverride = process.env.GIT_USER_NAME;
-export const gitUserEmailOverride = process.env.GIT_USER_EMAIL;
-
 // Home directory the agent runs under; the credential helper + git config live here.
 export const patchdollHome = process.env.HOME ?? homedir();
 

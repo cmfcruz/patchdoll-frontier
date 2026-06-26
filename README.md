@@ -53,9 +53,7 @@ Slack (enables the adapter when both are set): `SLACK_BOT_TOKEN`,
 
 GitHub access (enables `patchdoll_enable_github` when all three are set):
 `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`,
-`GITHUB_APP_PRIVATE_KEY_BASE64`. Optional commit identity overrides:
-`GIT_USER_NAME`, `GIT_USER_EMAIL`. See
-[docs/github-access.md](docs/github-access.md).
+`GITHUB_APP_PRIVATE_KEY_BASE64`. See [docs/github-access.md](docs/github-access.md).
 
 Agent credentials are read by the CLIs themselves (e.g. `OPENAI_API_KEY`,
 `CLAUDE_CODE_OAUTH_TOKEN` / `ANTHROPIC_API_KEY`); see `scripts/entrypoint.sh`.

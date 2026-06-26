@@ -45,12 +45,7 @@ email: <bot-user-id>+<app-slug>[bot]@users.noreply.github.com
 ```
 
 The bridge resolves this during `patchdoll_enable_github` via `GET /app` (for the
-slug) and `GET /users/<slug>[bot]` (for the id). Set either variable to override:
-
-```text
-GIT_USER_NAME=...
-GIT_USER_EMAIL=...
-```
+slug) and `GET /users/<slug>[bot]` (for the id).
 
 The App's installation permissions (e.g. Contents: read & write) determine what
 Codex can do. If the `GITHUB_APP_*` variables are unset, `patchdoll_enable_github`
