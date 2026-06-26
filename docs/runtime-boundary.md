@@ -9,14 +9,23 @@ Patchdoll's exclusive window to external systems from inside the runtime.
 
 ## Unix user model
 
-The container runs as the non-root `patchdoll-bridge` user. There are no sudo
-rules and no runtime privilege-escalation path in the image.
+The container runs as the non-root `patchdoll-bridge` user. The image also
+creates an `agent` user with home directory `/home/agent` for provider auth and
+state. There are no sudo rules and no runtime privilege-escalation path in the
+image.
 
 The provider spawn boundary passes an explicit environment whitelist. Slack and
 GitHub App secrets stay in the bridge environment and are not inherited by Codex,
 Claude Code, or tools those agents launch. Codex uses auth state under
 `/home/agent`; Claude receives only its own provider credential env vars when
 those vars are configured.
+
+Because this no-sudo model keeps the bridge unprivileged, provider child
+processes are still spawned by the bridge process rather than switched to the
+`agent` Unix UID at request time. The active isolation boundary in this PR is the
+scrubbed child environment plus bridge-only secret handling. A hard per-request
+UID boundary would require a separate agent worker/supervisor or another narrow
+privilege-transition mechanism.
 
 This build is configured by environment variables only. `GET /settings` reports
 the resolved configuration read-only; there is no endpoint or tool to mutate it

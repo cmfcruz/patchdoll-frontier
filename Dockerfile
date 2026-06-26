@@ -90,13 +90,16 @@ RUN set -eux; \
   apt-get update; \
   apt-get install -y --no-install-recommends ca-certificates git tini; \
   rm -rf /var/lib/apt/lists/*; \
+  groupadd --system patchdoll; \
   groupadd --system patchdoll-bridge; \
-  useradd --system --create-home --home-dir /home/patchdoll-bridge --gid patchdoll-bridge patchdoll-bridge; \
-  mkdir -p /workspace /home/agent; \
-  chown -R patchdoll-bridge:patchdoll-bridge /app /workspace /home/patchdoll-bridge /home/agent; \
+  groupadd --system agent; \
+  useradd --system --create-home --home-dir /home/patchdoll-bridge --gid patchdoll-bridge --groups patchdoll patchdoll-bridge; \
+  useradd --system --create-home --home-dir /home/agent --gid agent --groups patchdoll agent; \
+  mkdir -p /workspace; \
+  chown -R patchdoll-bridge:patchdoll /app /workspace /home/patchdoll-bridge; \
+  chown -R agent:patchdoll /home/agent; \
   chmod 0755 /home/patchdoll-bridge; \
-  chmod 0700 /home/agent; \
-  chmod 0750 /workspace
+  chmod 0770 /home/agent /workspace
 
 COPY --from=prod-deps --chown=patchdoll-bridge:patchdoll-bridge /app/package*.json ./
 COPY --from=prod-deps --chown=patchdoll-bridge:patchdoll-bridge /app/node_modules ./node_modules

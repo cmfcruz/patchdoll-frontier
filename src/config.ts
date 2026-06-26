@@ -201,8 +201,8 @@ function parseIntegerEnv(
 function baseAgentEnv(extra: Record<string, string | undefined>): NodeJS.ProcessEnv {
   return tidy({
     HOME: agentHome,
-    USER: "patchdoll-bridge",
-    LOGNAME: "patchdoll-bridge",
+    USER: "agent",
+    LOGNAME: "agent",
     PATH: agentPath,
     TERM: agentTerm,
     DISABLE_AUTOUPDATER: "1",

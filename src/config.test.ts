@@ -73,8 +73,8 @@ test("agent env only includes provider-safe values", async () => {
 
   assert.deepEqual(config.codexAgentEnv(), {
     HOME: "/home/agent",
-    USER: "patchdoll-bridge",
-    LOGNAME: "patchdoll-bridge",
+    USER: "agent",
+    LOGNAME: "agent",
     PATH: "/app/node_modules/.bin:/usr/local/bin:/usr/bin:/bin",
     TERM: "vt100",
     DISABLE_AUTOUPDATER: "1",
@@ -83,8 +83,8 @@ test("agent env only includes provider-safe values", async () => {
 
   assert.deepEqual(config.claudeAgentEnv(), {
     HOME: "/home/agent",
-    USER: "patchdoll-bridge",
-    LOGNAME: "patchdoll-bridge",
+    USER: "agent",
+    LOGNAME: "agent",
     PATH: "/app/node_modules/.bin:/usr/local/bin:/usr/bin:/bin",
     TERM: "vt100",
     DISABLE_AUTOUPDATER: "1",

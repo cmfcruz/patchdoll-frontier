@@ -21,9 +21,17 @@ run_as_agent() {
 }
 
 prepare_runtime_dirs() {
-  mkdir -p /workspace /home/agent /home/patchdoll-bridge
-  chmod 0700 /home/agent
-  chmod 0755 /home/patchdoll-bridge
+  mkdir -p /workspace
+
+  if [ ! -d /home/agent ]; then
+    log "/home/agent does not exist; the image must create the agent user and home directory"
+    exit 1
+  fi
+
+  if [ ! -w /home/agent ]; then
+    log "/home/agent is not writable by patchdoll-bridge; fix image ownership or permissions before starting"
+    exit 1
+  fi
 
   if [ ! -w /workspace ]; then
     log "/workspace is not writable by patchdoll-bridge; fix the volume ownership or permissions before starting"
