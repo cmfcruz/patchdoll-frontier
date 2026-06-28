@@ -88,7 +88,18 @@ WORKDIR /app
 
 RUN set -eux; \
   apt-get update; \
-  apt-get install -y --no-install-recommends ca-certificates git tini; \
+  apt-get install -y --no-install-recommends ca-certificates curl git jq tini; \
+  # GitHub CLI: install from GitHub's official apt repo and pin it to GitHub's
+  # signing key via signed-by, so apt verifies every gh package against that key
+  # instead of trusting an unsigned download or piping a remote script to a shell.
+  install -m 0755 -d /etc/apt/keyrings; \
+  curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+    -o /etc/apt/keyrings/githubcli-archive-keyring.gpg; \
+  chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg; \
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+    > /etc/apt/sources.list.d/github-cli.list; \
+  apt-get update; \
+  apt-get install -y --no-install-recommends gh; \
   rm -rf /var/lib/apt/lists/*; \
   groupadd --system patchdoll; \
   groupadd --system agent; \
