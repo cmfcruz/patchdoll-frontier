@@ -1,8 +1,8 @@
 // Bridge entry point.
 //
 // Runs a small local HTTP bridge (health, read-only settings, the agent MCP
-// endpoint, and a direct /agent endpoint) and, when configured, the Slack
-// adapter. This is a loopback-only control plane, not a public API; see
+// endpoint, and GitHub credentials) and, when configured, the Slack adapter.
+// This is a loopback-only control plane, not a public API; see
 // docs/runtime-boundary.md for the intended trust boundary. The actual behaviour
 // lives in focused modules:
 //
@@ -19,9 +19,8 @@
 // the resolved configuration but there is no way to mutate it at runtime.
 
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { resolve } from "node:path";
 
-import { githubConfigured, host, messageOf, missingGithubEnvVars, port, slackEnabled, workspace } from "./config.js";
+import { githubConfigured, host, messageOf, missingGithubEnvVars, port, slackEnabled } from "./config.js";
 import { agent } from "./agent.js";
 import { gitCredentialResponse } from "./github.js";
 import { log, logLevel } from "./log.js";
@@ -55,10 +54,6 @@ const server = createServer(async (req, res) => {
       return;
     }
 
-    if (req.method === "POST" && req.url === "/agent") {
-      return await handleAgentRoute(req, res);
-    }
-
     return sendJson(res, 404, { error: "not found" });
   } catch (error) {
     return sendJson(res, 500, { error: messageOf(error) });
@@ -84,25 +79,6 @@ async function handleMcpRoute(req: IncomingMessage, res: ServerResponse): Promis
   }
 
   return sendJson(res, response.status, response.body);
-}
-
-async function handleAgentRoute(req: IncomingMessage, res: ServerResponse): Promise<void> {
-  const body = await readJson(req);
-  if (typeof body.prompt !== "string" || !body.prompt.trim()) {
-    return sendJson(res, 400, { error: "prompt is required" });
-  }
-
-  const cwd = resolve(workspace, typeof body.cwd === "string" ? body.cwd : ".");
-  if (cwd !== workspace && !cwd.startsWith(`${workspace}/`)) {
-    throw new Error("cwd must stay inside the workspace root");
-  }
-
-  const result = await agent.run({
-    prompt: body.prompt,
-    cwd,
-    model: typeof body.model === "string" ? body.model : undefined
-  });
-  return sendJson(res, result.code === 0 ? 200 : 500, result);
 }
 
 function sendJson(res: ServerResponse, status: number, body: unknown): void {

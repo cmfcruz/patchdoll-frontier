@@ -43,7 +43,7 @@ http://127.0.0.1:3000/github/credential
 
 Do not bind the bridge to a public or untrusted interface. If a deployment ever
 needs to listen beyond loopback, add an explicit authentication and authorization
-layer before exposing `/settings`, `/mcp`, `/agent`, or `/github/credential`.
+layer before exposing `/settings`, `/mcp`, or `/github/credential`.
 
 ## Threat model
 

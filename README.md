@@ -1,9 +1,8 @@
 # patchdoll
 
 A tiny communications bridge that runs **Codex** or **Claude Code** on request.
-It listens for Slack @mentions and DMs (and a loopback HTTP `/agent` endpoint),
-runs the configured agent against the `/workspace` tree, and streams the result
-back into Slack.
+It listens for Slack @mentions and DMs, runs the configured agent against the
+`/workspace` tree, and streams the result back into Slack.
 
 This is the env-only frontier rebuild of the Patchdoll bridge: **all configuration
 comes from environment variables**. There is no settings file and no runtime
@@ -16,7 +15,7 @@ branches on the provider at runtime beyond a single seam.
 
 | File         | Responsibility |
 |--------------|----------------|
-| `bridge.ts`  | HTTP entry point: `/health`, read-only `/settings`, `/mcp`, `/github/credential`, `/agent`, plus startup/shutdown. |
+| `bridge.ts`  | HTTP entry point: `/health`, read-only `/settings`, `/mcp`, `/github/credential`, plus startup/shutdown. |
 | `agent.ts`   | The small `AgentProvider` interface and the active provider. The bridge, Slack, and MCP only talk to `agent`. |
 | `config.ts`  | All environment-derived configuration, resolved once. The only module that reads `process.env`. |
 | `codex.ts`   | Builds and runs `codex exec` with a scrubbed agent environment; maps its `--json` events to progress notes. |
