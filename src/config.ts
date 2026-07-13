@@ -67,6 +67,7 @@ export type ReasoningEffort = "minimal" | "low" | "medium" | "high" | "xhigh";
 export type CodexSettings = {
   model?: string;
   reasoningEffort?: ReasoningEffort;
+  memoryEnabled?: boolean;
 };
 
 const validReasoningEfforts = new Set<ReasoningEffort>(["minimal", "low", "medium", "high", "xhigh"]);
@@ -81,8 +82,10 @@ export const codexSettings: CodexSettings = tidy({
     process.env.CODEX_REASONING_EFFORT,
     validReasoningEfforts,
     undefined
-  )
+  ),
+  memoryEnabled: parseBooleanEnv("CODEX_MEMORY_ENABLED", process.env.CODEX_MEMORY_ENABLED)
 });
+const openaiApiKey = process.env.OPENAI_API_KEY?.trim() || undefined;
 
 // --- Claude Code ---
 // The CLI flags match stabledaemons/patchdoll's Claude provider: headless `-p`
@@ -104,6 +107,7 @@ export type ClaudeEffort = "low" | "medium" | "high" | "xhigh" | "max";
 export type ClaudeSettings = {
   model?: string;
   effort?: ClaudeEffort;
+  memoryEnabled?: boolean;
 };
 
 const validClaudeEfforts = new Set<ClaudeEffort>(["low", "medium", "high", "xhigh", "max"]);
@@ -113,7 +117,8 @@ const defaultClaudeModel = "claude-opus-4-8";
 // effort. Env vars remain the only supported way to override them.
 export const claudeSettings: ClaudeSettings = tidy({
   model: process.env.CLAUDE_MODEL?.trim() || defaultClaudeModel,
-  effort: parseEnum("CLAUDE_EFFORT", process.env.CLAUDE_EFFORT, validClaudeEfforts, "high")
+  effort: parseEnum("CLAUDE_EFFORT", process.env.CLAUDE_EFFORT, validClaudeEfforts, "high"),
+  memoryEnabled: parseBooleanEnv("CLAUDE_MEMORY_ENABLED", process.env.CLAUDE_MEMORY_ENABLED)
 });
 const claudeCodeOauthToken = process.env.CLAUDE_CODE_OAUTH_TOKEN?.trim() || undefined;
 const anthropicApiKey = process.env.ANTHROPIC_API_KEY?.trim() || undefined;
@@ -160,13 +165,20 @@ export function missingGithubEnvVars(): string[] {
 }
 
 export function codexAgentEnv(): NodeJS.ProcessEnv {
-  return baseAgentEnv({ CODEX_HOME: agentHome });
+  return baseAgentEnv({
+    CODEX_HOME: agentHome,
+    OPENAI_API_KEY: openaiApiKey
+  });
 }
 
 export function claudeAgentEnv(): NodeJS.ProcessEnv {
   return baseAgentEnv({
     CLAUDE_CODE_OAUTH_TOKEN: claudeCodeOauthToken,
-    ANTHROPIC_API_KEY: anthropicApiKey
+    ANTHROPIC_API_KEY: anthropicApiKey,
+    // Claude's native switch is disable-shaped. Only synthesize it when the
+    // Patchdoll override is explicit so an unset env keeps Claude's own default.
+    CLAUDE_CODE_DISABLE_AUTO_MEMORY:
+      claudeSettings.memoryEnabled === undefined ? undefined : claudeSettings.memoryEnabled ? "0" : "1"
   });
 }
 
@@ -198,6 +210,14 @@ function parseIntegerEnv(
   }
 
   return parsed;
+}
+
+function parseBooleanEnv(name: string, raw: string | undefined): boolean | undefined {
+  const value = raw?.trim().toLowerCase();
+  if (!value) return undefined;
+  if (value === "true" || value === "1") return true;
+  if (value === "false" || value === "0") return false;
+  throw new Error(`${name} must be true, false, 1, or 0; got: '${raw?.trim()}'`);
 }
 
 function baseAgentEnv(extra: Record<string, string | undefined>): NodeJS.ProcessEnv {

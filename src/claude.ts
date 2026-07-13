@@ -69,6 +69,7 @@ export async function runClaude({ prompt, cwd, model, onProgress }: AgentRunRequ
     cwd,
     model: model ?? claudeSettings.model,
     effort: claudeSettings.effort,
+    memoryEnabled: claudeSettings.memoryEnabled,
     promptChars: prompt.length,
     prompt: prompt.length > 2000 ? `${prompt.slice(0, 2000)}…[+${prompt.length - 2000} chars]` : prompt
   });

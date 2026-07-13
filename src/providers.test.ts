@@ -1,8 +1,19 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { progressNoteFromEvent } from "./codex.js";
+import { buildCodexArgs, progressNoteFromEvent } from "./codex.js";
 import { messageFromResult, toolNote } from "./claude.js";
+
+test("buildCodexArgs maps an explicit memory override to the Codex feature", () => {
+  const enabled = buildCodexArgs({ memoryEnabled: true }, undefined, "/tmp/last-message");
+  assert.ok(enabled.includes("features.memories=true"));
+
+  const disabled = buildCodexArgs({ memoryEnabled: false }, undefined, "/tmp/last-message");
+  assert.ok(disabled.includes("features.memories=false"));
+
+  const nativeDefault = buildCodexArgs({}, undefined, "/tmp/last-message");
+  assert.equal(nativeDefault.some((arg) => arg.startsWith("features.memories=")), false);
+});
 
 test("progressNoteFromEvent maps Codex item.completed events to notes", () => {
   const note = (item: object) =>

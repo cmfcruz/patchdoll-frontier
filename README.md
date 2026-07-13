@@ -43,6 +43,17 @@ Model / effort (optional):
 - Claude: `CLAUDE_MODEL` (default `claude-opus-4-8`), `CLAUDE_EFFORT` (`low|medium|high|xhigh|max`, default `high`).
 - An invalid effort value fails loudly at startup.
 
+Cross-run memory (optional):
+
+- `CODEX_MEMORY_ENABLED` (`true|false|1|0`) controls Codex's experimental
+  `memories` feature.
+- `CLAUDE_MEMORY_ENABLED` (`true|false|1|0`) controls Claude Code auto-memory.
+- When either variable is unset, that provider keeps its native default. Set it
+  to `true` to force memory on or `false` to force memory off.
+
+Provider memory is stored under `/home/agent`. Persist that directory as a
+volume if memories must survive container replacement.
+
 Timeouts (optional): `CODEX_TIMEOUT_MS`, `CLAUDE_TIMEOUT_MS` (default 30 min).
 
 Logging: `LOG_LEVEL` (`error|warn|info|debug`, default `info`).
@@ -56,9 +67,8 @@ GitHub access (enables `patchdoll_enable_github` when all three are set):
 
 Agent credentials:
 
-- Codex: `OPENAI_API_KEY` is consumed by `scripts/entrypoint.sh` to log in the
-  provider home, then normal runs use `/home/agent` state instead of inheriting
-  the key.
+- Codex: `OPENAI_API_KEY` is used by `scripts/entrypoint.sh` for login and is
+  passed only to Codex processes at run time.
 - Claude: `CLAUDE_CODE_OAUTH_TOKEN` / `ANTHROPIC_API_KEY` are passed only to the
   Claude process because Claude Code needs them at run time unless stored auth is
   already configured.

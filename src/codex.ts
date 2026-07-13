@@ -15,7 +15,11 @@ import { log } from "./log.js";
 import { createLineParser, parseJsonObject } from "./stream.js";
 import type { AgentProvider, AgentRunRequest, AgentRunResult } from "./agent.js";
 
-function buildCodexArgs(settings: CodexSettings, model: string | undefined, lastMessagePath: string): string[] {
+export function buildCodexArgs(
+  settings: CodexSettings,
+  model: string | undefined,
+  lastMessagePath: string
+): string[] {
   const args = ["exec", "--json"];
 
   const modelArg = model ?? settings.model;
@@ -24,6 +28,9 @@ function buildCodexArgs(settings: CodexSettings, model: string | undefined, last
   }
   if (settings.reasoningEffort) {
     args.push("--config", `model_reasoning_effort="${settings.reasoningEffort}"`);
+  }
+  if (settings.memoryEnabled !== undefined) {
+    args.push("--config", `features.memories=${settings.memoryEnabled}`);
   }
 
   // Expose the Patchdoll MCP server (the GitHub access tool) to Codex. A bare `url`
@@ -56,6 +63,7 @@ export async function runCodex({ prompt, cwd, model, onProgress }: AgentRunReque
     cwd,
     model: model ?? codexSettings.model,
     reasoningEffort: codexSettings.reasoningEffort,
+    memoryEnabled: codexSettings.memoryEnabled,
     args,
     promptChars: prompt.length,
     prompt: prompt.length > 2000 ? `${prompt.slice(0, 2000)}…[+${prompt.length - 2000} chars]` : prompt

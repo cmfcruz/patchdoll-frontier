@@ -13,6 +13,9 @@ const envKeys = [
   "CLAUDE_EFFORT",
   "CODEX_MODEL",
   "CLAUDE_MODEL",
+  "CODEX_MEMORY_ENABLED",
+  "CLAUDE_MEMORY_ENABLED",
+  "OPENAI_API_KEY",
   "SLACK_BOT_TOKEN",
   "SLACK_APP_TOKEN",
   "GITHUB_APP_ID",
@@ -74,6 +77,39 @@ test("config uses frontier model defaults with env overrides", async () => {
   assert.equal(explicit.claudeSettings.model, "claude-custom");
 });
 
+test("config parses optional provider memory overrides", async () => {
+  const defaults = await importConfig({ PROVIDER: "codex" });
+  assert.equal(defaults.codexSettings.memoryEnabled, undefined);
+  assert.equal(defaults.claudeSettings.memoryEnabled, undefined);
+
+  const enabled = await importConfig({
+    PROVIDER: "codex",
+    CODEX_MEMORY_ENABLED: "true",
+    CLAUDE_MEMORY_ENABLED: "1"
+  });
+  assert.equal(enabled.codexSettings.memoryEnabled, true);
+  assert.equal(enabled.claudeSettings.memoryEnabled, true);
+
+  const disabled = await importConfig({
+    PROVIDER: "claude",
+    CODEX_MEMORY_ENABLED: "false",
+    CLAUDE_MEMORY_ENABLED: "0"
+  });
+  assert.equal(disabled.codexSettings.memoryEnabled, false);
+  assert.equal(disabled.claudeSettings.memoryEnabled, false);
+});
+
+test("config rejects malformed provider memory overrides", async () => {
+  await assert.rejects(
+    () => importConfig({ PROVIDER: "codex", CODEX_MEMORY_ENABLED: "yes" }),
+    /CODEX_MEMORY_ENABLED must be/
+  );
+  await assert.rejects(
+    () => importConfig({ PROVIDER: "claude", CLAUDE_MEMORY_ENABLED: "enabled" }),
+    /CLAUDE_MEMORY_ENABLED must be/
+  );
+});
+
 test("agent env only includes provider-safe values", async () => {
   const config = await importConfig({
     PROVIDER: "codex",
@@ -82,6 +118,7 @@ test("agent env only includes provider-safe values", async () => {
     GITHUB_APP_ID: "123",
     GITHUB_APP_INSTALLATION_ID: "456",
     GITHUB_APP_PRIVATE_KEY_BASE64: "private-key",
+    OPENAI_API_KEY: "openai-key",
     CLAUDE_CODE_OAUTH_TOKEN: "claude-oauth",
     ANTHROPIC_API_KEY: "anthropic-key",
     TERM: "vt100"
@@ -94,7 +131,8 @@ test("agent env only includes provider-safe values", async () => {
     PATH: "/app/node_modules/.bin:/usr/local/bin:/usr/bin:/bin",
     TERM: "vt100",
     DISABLE_AUTOUPDATER: "1",
-    CODEX_HOME: "/home/agent"
+    CODEX_HOME: "/home/agent",
+    OPENAI_API_KEY: "openai-key"
   });
 
   assert.deepEqual(config.claudeAgentEnv(), {
@@ -107,6 +145,17 @@ test("agent env only includes provider-safe values", async () => {
     CLAUDE_CODE_OAUTH_TOKEN: "claude-oauth",
     ANTHROPIC_API_KEY: "anthropic-key"
   });
+});
+
+test("Claude agent env maps memory overrides to its native disable switch", async () => {
+  const enabled = await importConfig({ PROVIDER: "claude", CLAUDE_MEMORY_ENABLED: "true" });
+  assert.equal(enabled.claudeAgentEnv().CLAUDE_CODE_DISABLE_AUTO_MEMORY, "0");
+
+  const disabled = await importConfig({ PROVIDER: "claude", CLAUDE_MEMORY_ENABLED: "false" });
+  assert.equal(disabled.claudeAgentEnv().CLAUDE_CODE_DISABLE_AUTO_MEMORY, "1");
+
+  const nativeDefault = await importConfig({ PROVIDER: "claude" });
+  assert.equal(nativeDefault.claudeAgentEnv().CLAUDE_CODE_DISABLE_AUTO_MEMORY, undefined);
 });
 
 test("config accepts explicit integer port and timeout env values", async () => {
