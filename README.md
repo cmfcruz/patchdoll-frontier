@@ -40,8 +40,8 @@ HTTP bridge:
 
 Model / effort (optional):
 
-- Codex: `CODEX_MODEL`, `CODEX_REASONING_EFFORT` (`minimal|low|medium|high|xhigh`).
-- Claude: `CLAUDE_MODEL` (default `sonnet`), `CLAUDE_EFFORT` (`low|medium|high|xhigh|max`, default `high`).
+- Codex: `CODEX_MODEL` (default `gpt-5.6-sol`), `CODEX_REASONING_EFFORT` (`minimal|low|medium|high|xhigh`).
+- Claude: `CLAUDE_MODEL` (default `claude-opus-4-8`), `CLAUDE_EFFORT` (`low|medium|high|xhigh|max`, default `high`).
 - An invalid effort value fails loudly at startup.
 
 Timeouts (optional): `CODEX_TIMEOUT_MS`, `CLAUDE_TIMEOUT_MS` (default 30 min).

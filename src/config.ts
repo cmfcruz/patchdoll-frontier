@@ -70,11 +70,12 @@ export type CodexSettings = {
 };
 
 const validReasoningEfforts = new Set<ReasoningEffort>(["minimal", "low", "medium", "high", "xhigh"]);
+const defaultCodexModel = "gpt-5.6-sol";
 
 // Resolved once from the environment. CODEX_MODEL/CODEX_REASONING_EFFORT are
-// optional; when unset, Codex falls back to its own defaults.
+// optional; when unset, Patchdoll supplies the baked-in Codex default model.
 export const codexSettings: CodexSettings = tidy({
-  model: process.env.CODEX_MODEL?.trim() || undefined,
+  model: process.env.CODEX_MODEL?.trim() || defaultCodexModel,
   reasoningEffort: parseEnum(
     "CODEX_REASONING_EFFORT",
     process.env.CODEX_REASONING_EFFORT,
@@ -106,11 +107,12 @@ export type ClaudeSettings = {
 };
 
 const validClaudeEfforts = new Set<ClaudeEffort>(["low", "medium", "high", "xhigh", "max"]);
+const defaultClaudeModel = "claude-opus-4-8";
 
-// Resolved once from the environment, with the same defaults Patchdoll shipped:
-// model `sonnet`, effort `high`.
+// Resolved once from the environment, with Patchdoll defaults for the model and
+// effort. Env vars remain the only supported way to override them.
 export const claudeSettings: ClaudeSettings = tidy({
-  model: process.env.CLAUDE_MODEL?.trim() || "sonnet",
+  model: process.env.CLAUDE_MODEL?.trim() || defaultClaudeModel,
   effort: parseEnum("CLAUDE_EFFORT", process.env.CLAUDE_EFFORT, validClaudeEfforts, "high")
 });
 const claudeCodeOauthToken = process.env.CLAUDE_CODE_OAUTH_TOKEN?.trim() || undefined;

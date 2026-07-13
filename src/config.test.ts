@@ -58,6 +58,22 @@ test("config uses default numeric env values when unset", async () => {
   assert.equal(config.claudeTimeoutMs, 1800000);
 });
 
+test("config uses frontier model defaults with env overrides", async () => {
+  const defaults = await importConfig({ PROVIDER: "codex" });
+
+  assert.deepEqual(defaults.codexSettings, { model: "gpt-5.6-sol" });
+  assert.deepEqual(defaults.claudeSettings, { model: "claude-opus-4-8", effort: "high" });
+
+  const explicit = await importConfig({
+    PROVIDER: "claude",
+    CODEX_MODEL: "codex-custom",
+    CLAUDE_MODEL: "claude-custom"
+  });
+
+  assert.equal(explicit.codexSettings.model, "codex-custom");
+  assert.equal(explicit.claudeSettings.model, "claude-custom");
+});
+
 test("agent env only includes provider-safe values", async () => {
   const config = await importConfig({
     PROVIDER: "codex",

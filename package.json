@@ -14,8 +14,8 @@
     "node": ">=24"
   },
   "dependencies": {
-    "@anthropic-ai/claude-code": "2.1.158",
-    "@openai/codex": "0.139.0",
+    "@anthropic-ai/claude-code": "2.1.207",
+    "@openai/codex": "0.144.3",
     "@slack/bolt": "4.7.3"
   },
   "devDependencies": {
