@@ -1,36 +1,11 @@
 # syntax=docker/dockerfile:1.7
 
-ARG SAFE_CHAIN_VERSION=1.5.2
-ARG SAFE_CHAIN_INSTALL_DIR=/usr/local/.safe-chain
-
 # Per-agent image variant. Each image ships exactly one provider; there is no
 # default and no combined image. Build the variant explicitly with:
 #   --build-arg PROVIDER_VARIANT=claude   (or codex)
 ARG PROVIDER_VARIANT
 
-FROM node:24-bookworm AS safe-chain
-
-ARG SAFE_CHAIN_VERSION
-ARG SAFE_CHAIN_INSTALL_DIR
-
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-RUN set -eux; \
-  apt-get update; \
-  apt-get install -y --no-install-recommends ca-certificates curl; \
-  rm -rf /var/lib/apt/lists/*; \
-  curl -fsSL "https://github.com/AikidoSec/safe-chain/releases/download/${SAFE_CHAIN_VERSION}/install-safe-chain.sh" \
-    | env -u SAFE_CHAIN_VERSION sh -s -- --ci --install-dir "${SAFE_CHAIN_INSTALL_DIR}"
-
-ENV PATH="${SAFE_CHAIN_INSTALL_DIR}/shims:${SAFE_CHAIN_INSTALL_DIR}/bin:${PATH}" \
-  SAFE_CHAIN_LOGGING=silent \
-  SAFE_CHAIN_MINIMUM_PACKAGE_AGE_HOURS=48 \
-  NPM_CONFIG_AUDIT=false \
-  NPM_CONFIG_FUND=false
-
-RUN npm safe-chain-verify
-
-FROM safe-chain AS deps
+FROM node:24-bookworm AS deps
 
 WORKDIR /app
 COPY package*.json tsconfig*.json ./
