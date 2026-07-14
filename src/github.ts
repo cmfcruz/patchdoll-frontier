@@ -5,29 +5,28 @@
 // The flow:
 //
 //   1. The agent calls the `patchdoll_enable_github` MCP tool (see mcp.ts), which
-//      calls `enableGithubAccess()` here to install a git credential helper.
+//      calls `enableGithubAccess()` here to install a bridge-owned credential
+//      helper and asks the agent worker to update its own global git config.
 //   2. When the agent later runs `git push`, git invokes that helper, which makes
 //      a loopback request to the bridge's `GET /github/credential` endpoint.
 //   3. `gitCredentialResponse()` mints (or reuses a cached) installation token
 //      and returns it to git in the credential-helper format.
 //
-// The token is handed straight to git and never returned to the model, so it
-// can't leak into the transcript, a Slack reply, or `.git/config`.
+// The MCP tool never returns the token and it is never stored in the transcript
+// or `.git/config`; the credential helper hands it directly to git on demand.
 
-import { spawn } from "node:child_process";
 import { createSign } from "node:crypto";
 import { chmod, mkdir, writeFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { dirname } from "node:path";
 
 import {
-  bridgeHome,
-  gitAgentEnv,
   githubAppId,
   githubConfigured,
   githubInstallationId,
   githubPrivateKeyBase64,
   port
 } from "./config.js";
+import { configureAgentGithub } from "./agent.js";
 
 const GITHUB_API_URL = "https://api.github.com";
 const GITHUB_API_VERSION = "2022-11-28";
@@ -36,7 +35,7 @@ const GITHUB_API_VERSION = "2022-11-28";
 // so this leaves comfortable margin while avoiding a mint on every git auth.
 const TOKEN_FRESHNESS_MS = 30 * 60 * 1000;
 
-const helperPath = join(bridgeHome, ".patchdoll", "git-credential-patchdoll.cjs");
+const helperPath = "/run/patchdoll/bridge/git-credential-patchdoll.cjs";
 
 type GitIdentity = { name: string; email: string };
 
@@ -60,10 +59,7 @@ export async function enableGithubAccess(): Promise<string> {
   const identity = await resolveGitIdentity(token);
 
   await writeCredentialHelper();
-  await gitConfig("credential.helper", `!node ${helperPath}`);
-  await gitConfig("credential.https://github.com.helper", `!node ${helperPath}`);
-  await gitConfig("user.name", identity.name);
-  await gitConfig("user.email", identity.email);
+  await configureAgentGithub(helperPath, identity);
 
   return `GitHub access enabled as ${identity.name} <${identity.email}>. git commits and pushes to github.com now authenticate via a short-lived installation token.`;
 }
@@ -195,23 +191,10 @@ require("node:http")
   .end();
 `;
 
-  await mkdir(dirname(helperPath), { recursive: true, mode: 0o755 });
-  await chmod(dirname(helperPath), 0o755);
-  await writeFile(helperPath, script, { mode: 0o755 });
-  await chmod(helperPath, 0o755);
-}
-
-function gitConfig(key: string, value: string): Promise<void> {
-  return new Promise((resolveConfig, reject) => {
-    const child = spawn("git", ["config", "--global", key, value], {
-      env: gitAgentEnv(),
-      stdio: "ignore"
-    });
-    child.once("error", reject);
-    child.once("close", (code) =>
-      code === 0 ? resolveConfig() : reject(new Error(`git config ${key} exited with code ${code}`))
-    );
-  });
+  await mkdir(dirname(helperPath), { recursive: true, mode: 0o750 });
+  await chmod(dirname(helperPath), 0o750);
+  await writeFile(helperPath, script, { mode: 0o550 });
+  await chmod(helperPath, 0o550);
 }
 
 function base64UrlJson(value: unknown): string {

@@ -1,53 +1,75 @@
 # Patchdoll runtime boundary
 
 Patchdoll's HTTP bridge is a local control plane for the agent, not a public API.
-
-The server exists so Slack can invoke the agent (Codex or Claude Code, depending
-on the image variant) and so the agent can consume Patchdoll-only features through
-loopback endpoints, namely temporary GitHub credentials. It is intended to be
-Patchdoll's exclusive window to external systems from inside the runtime.
+It receives Slack events and exposes the MCP and temporary GitHub credential
+endpoints used by the configured provider.
 
 ## Unix user model
 
-The container runs as the non-root `patchdoll` user. The image also
-creates an `agent` user with home directory `/home/agent` for provider auth and
-state. There are no sudo rules and no runtime privilege-escalation path in the
-image.
+The container starts `tini` and a small launcher as root. The launcher performs
+only startup ownership migration, provider authentication, privilege dropping,
+signal forwarding, and child reaping. It starts two long-lived children:
 
-The provider spawn boundary passes an explicit environment whitelist. Slack and
-GitHub App secrets stay in the bridge environment and are not inherited by Codex,
-Claude Code, or tools those agents launch. Codex uses auth state under
-`/home/agent`; Claude receives only its own provider credential env vars when
-those vars are configured.
+```text
+bridge          uid=patchdoll  gid=patchdoll  supplementary=patchdoll-ipc
+provider worker uid=agent      gid=agent      supplementary=patchdoll-ipc
+```
 
-Because this no-sudo model keeps the bridge unprivileged, provider child
-processes are still spawned by the bridge process rather than switched to the
-`agent` Unix UID at request time. The active isolation boundary in this PR is the
-scrubbed child environment plus bridge-only secret handling. A hard per-request
-UID boundary would require a separate agent worker/supervisor or another narrow
-privilege-transition mechanism.
+Both children are launched with `setpriv --reuid/--regid --init-groups`; setting
+`USER` and `HOME` is not treated as a Unix identity change. Neither child keeps
+root privileges or Linux setuid/setgid capabilities.
 
-This build is configured by environment variables only. `GET /settings` reports
-the resolved configuration read-only; there is no endpoint or tool to mutate it
-at runtime, so the configuration surface is fixed at process start.
+The launcher gives each child an explicit environment whitelist. Slack tokens
+and the GitHub App private key go only to the bridge. OpenAI or Anthropic
+credentials go only to the provider worker. Codex, Claude Code, and all tools
+they launch inherit the actual `agent` UID/GID and a provider-safe environment.
+
+At startup, persistent `/home/agent` and `/workspace` mounts are migrated to the
+`agent` UID. Agent state is private (`0700`); workspace directories are setgid
+and group-writable for deliberate bridge/agent collaboration. This migration is
+intentional and may recursively change legacy volume ownership.
+
+## Provider IPC
+
+The bridge sends one NDJSON request per connection to:
+
+```text
+/run/patchdoll/providers/<provider>.sock
+```
+
+The worker streams progress messages followed by a result or error. The socket
+is owned by `agent:patchdoll-ipc` with mode `0660`. Before parsing a request, the
+worker asks the kernel for the peer process's PID, UID, and GID with
+`SO_PEERCRED`; only the `patchdoll` account is accepted. Protocol identity fields
+cannot spoof this check.
+
+`patchdoll_enable_github` keeps long-lived GitHub App secrets and token minting
+in the bridge. The bridge writes a read-only credential helper under its runtime
+directory, then asks the worker over the same authenticated socket to configure
+the agent-owned global git config. Git later obtains short-lived credentials
+from the loopback bridge endpoint.
 
 ## Binding model
 
-By default the bridge binds to `127.0.0.1`, and the agent reaches it through
-loopback URLs such as:
+By default the bridge binds to `127.0.0.1`, and the agent reaches it through:
 
 ```text
 http://127.0.0.1:3000/mcp
 http://127.0.0.1:3000/github/credential
 ```
 
-Do not bind the bridge to a public or untrusted interface. If a deployment ever
-needs to listen beyond loopback, add an explicit authentication and authorization
-layer before exposing `/settings`, `/mcp`, or `/github/credential`.
+Do not bind the bridge to a public or untrusted interface. If a deployment must
+listen beyond loopback, add authentication and authorization before exposing
+`/settings`, `/mcp`, or `/github/credential`.
 
 ## Threat model
 
-Normal agent commands do not inherit bridge secrets or sudo privileges. The
-loopback endpoints are still privileged local integration points: they should
-stay bound to loopback unless an explicit authentication and authorization layer
-is added first.
+The UID split prevents the network-facing bridge from creating agent-owned
+state and prevents provider processes from reading the bridge's environment or
+private runtime files. It is not a sandbox around model commands: the agent is
+deliberately allowed to modify `/workspace`, use the local MCP integration, and
+run arbitrary tools as the `agent` user. Shared group-writable workspace access
+is collaboration, not mutual filesystem isolation.
+
+Configuration remains environment-only. `GET /settings` is read-only; there is
+no runtime endpoint or tool that mutates model settings.

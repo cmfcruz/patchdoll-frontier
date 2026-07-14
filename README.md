@@ -10,13 +10,27 @@ mutation — to change the model or effort, restart with different env vars.
 
 ## Architecture
 
-One provider is baked into each image variant (`PROVIDER`); nothing
-branches on the provider at runtime beyond a single seam.
+One provider is baked into each image variant (`PROVIDER`). A root startup
+supervisor launches the communications bridge as `patchdoll` and the provider
+worker as `agent`; after startup, neither child has privilege-changing powers.
+
+```text
+tini -> root supervisor -> bridge (patchdoll UID)
+                       `-> provider worker (agent UID) -> Codex or Claude Code
+```
+
+The bridge and worker communicate over a filesystem-permissioned Unix socket.
+The worker verifies every client using Linux `SO_PEERCRED`, so identity is never
+trusted from the request payload.
 
 | File         | Responsibility |
 |--------------|----------------|
 | `bridge.ts`  | HTTP entry point: `/health`, read-only `/settings`, `/mcp`, `/github/credential`, plus startup/shutdown. |
-| `agent.ts`   | The small `AgentProvider` interface and the active provider. The bridge, Slack, and MCP only talk to `agent`. |
+| `agent.ts`   | The `AgentProvider` interface and bridge-side worker proxy. |
+| `providerSocket.ts` | NDJSON request/progress/result protocol over the provider Unix socket. |
+| `providerWorker.ts` | Agent-owned socket server, peer-credential check, and agent-owned git configuration. |
+| `peercred.ts` | Wrapper around the tiny `SO_PEERCRED` helper. |
+| `worker.ts` | Provider-worker entry point running as the `agent` UID. |
 | `config.ts`  | All environment-derived configuration, resolved once. The only module that reads `process.env`. |
 | `codex.ts`   | Builds and runs `codex exec` with a scrubbed agent environment; maps its `--json` events to progress notes. |
 | `claude.ts`  | Builds and runs `claude` (`stream-json`) with a scrubbed agent environment; maps its events to progress notes. |
@@ -68,10 +82,14 @@ GitHub access (enables `patchdoll_enable_github` when all three are set):
 Agent credentials:
 
 - Codex: `OPENAI_API_KEY` is used by `scripts/entrypoint.sh` for login and is
-  passed only to Codex processes at run time.
+  passed only to the agent worker and Codex processes at run time.
 - Claude: `CLAUDE_CODE_OAUTH_TOKEN` / `ANTHROPIC_API_KEY` are passed only to the
-  Claude process because Claude Code needs them at run time unless stored auth is
-  already configured.
+  agent worker and Claude process because Claude Code needs them at run time
+  unless stored auth is already configured.
+
+Slack and GitHub App secrets are passed only to the `patchdoll` bridge. Provider
+credentials are passed only to the `agent` worker. The root supervisor clears
+its shell copies after both children start.
 
 ## Scripts
 

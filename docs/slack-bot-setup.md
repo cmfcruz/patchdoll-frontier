@@ -1,6 +1,6 @@
 # Slack bot setup
 
-Short checklist for creating an Patchdoll Slack bot and connecting it to the
+Short checklist for creating a Patchdoll Slack bot and connecting it to the
 container.
 
 ## 1. Create the Slack app
@@ -90,11 +90,11 @@ container logs, open the printed URL, and enter the device code. The login
 state persists under:
 
 ```text
-/home/patchdoll/.codex
+/home/agent
 ```
 
-Because `patchdoll-home:/home/patchdoll` is a persistent volume, later restarts reuse
-the login.
+Persist `/home/agent` as a volume so later restarts reuse the login and provider
+memory. The startup supervisor migrates that volume to the real `agent` UID.
 
 For noninteractive API-key auth instead, set this as a balena secret/env var:
 

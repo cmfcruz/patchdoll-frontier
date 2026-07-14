@@ -7,7 +7,6 @@
 // here, at startup, from the environment. To change them, restart with different
 // env vars. That keeps the whole configuration surface auditable in one place.
 
-import { homedir } from "node:os";
 import { resolve } from "node:path";
 
 // --- Provider selection ---
@@ -44,6 +43,7 @@ export const logLevel: LogLevel = parseEnum("LOG_LEVEL", process.env.LOG_LEVEL, 
 export const workspace = resolve("/workspace");
 export const agentHome = "/home/agent";
 export const agentPath = "/app/node_modules/.bin:/usr/local/bin:/usr/bin:/bin";
+export const providerSocketPath = `/run/patchdoll/providers/${provider}.sock`;
 const agentTerm = process.env.TERM?.trim() || "xterm-256color";
 
 // URL the agent uses to reach the Patchdoll MCP server we expose from this same
@@ -123,6 +123,8 @@ export const claudeSettings: ClaudeSettings = tidy({
 const claudeCodeOauthToken = process.env.CLAUDE_CODE_OAUTH_TOKEN?.trim() || undefined;
 const anthropicApiKey = process.env.ANTHROPIC_API_KEY?.trim() || undefined;
 
+export const providerTimeoutMs = provider === "claude" ? claudeTimeoutMs : codexTimeoutMs;
+
 // --- GitHub App (on-demand token for `git push`) ---
 // When all three are set, the agent can call the `patchdoll_enable_github` MCP tool
 // to wire up a git credential helper that fetches a short-lived installation
@@ -130,9 +132,6 @@ const anthropicApiKey = process.env.ANTHROPIC_API_KEY?.trim() || undefined;
 export const githubAppId = process.env.GITHUB_APP_ID;
 export const githubInstallationId = process.env.GITHUB_APP_INSTALLATION_ID;
 export const githubPrivateKeyBase64 = process.env.GITHUB_APP_PRIVATE_KEY_BASE64;
-
-// Home directory the bridge runs under; bridge-owned helpers live here.
-export const bridgeHome = process.env.HOME ?? homedir();
 
 // --- Slack ---
 export const slackBotToken = process.env.SLACK_BOT_TOKEN?.trim() || undefined;

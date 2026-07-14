@@ -28,6 +28,11 @@ FROM deps AS build
 COPY src ./src
 RUN npm run build
 
+FROM deps AS peercred
+
+COPY tools/patchdoll-peercred.c ./patchdoll-peercred.c
+RUN cc -O2 -Wall -Wextra -o /patchdoll-peercred ./patchdoll-peercred.c
+
 FROM deps AS prod-deps
 
 ARG TARGETARCH
@@ -63,7 +68,7 @@ WORKDIR /app
 
 RUN set -eux; \
   apt-get update; \
-  apt-get install -y --no-install-recommends ca-certificates curl git jq tini; \
+  apt-get install -y --no-install-recommends ca-certificates curl git jq tini util-linux; \
   # GitHub CLI: install from GitHub's official apt repo and pin it to GitHub's
   # signing key via signed-by, so apt verifies every gh package against that key
   # instead of trusting an unsigned download or piping a remote script to a shell.
@@ -77,20 +82,29 @@ RUN set -eux; \
   apt-get install -y --no-install-recommends gh; \
   rm -rf /var/lib/apt/lists/*; \
   groupadd --system patchdoll; \
+  groupadd --system patchdoll-ipc; \
   groupadd --system agent; \
-  useradd --system --create-home --home-dir /home/patchdoll --gid patchdoll patchdoll; \
-  useradd --system --create-home --home-dir /home/agent --gid agent --groups patchdoll agent; \
-  mkdir -p /workspace; \
-  chown -R patchdoll:patchdoll /app /workspace /home/patchdoll; \
-  chown -R agent:patchdoll /home/agent; \
-  chmod 0755 /home/patchdoll; \
-  chmod 0770 /home/agent /workspace
+  useradd --system --create-home --home-dir /home/patchdoll --gid patchdoll --groups patchdoll-ipc patchdoll; \
+  useradd --system --create-home --home-dir /home/agent --gid agent --groups patchdoll-ipc agent; \
+  mkdir -p /run/patchdoll/bridge /run/patchdoll/providers /workspace; \
+  chown -R patchdoll:patchdoll /app /home/patchdoll; \
+  chown root:root /run/patchdoll; \
+  chown patchdoll:patchdoll-ipc /run/patchdoll/bridge; \
+  chown agent:patchdoll-ipc /run/patchdoll/providers /workspace; \
+  chown -R agent:agent /home/agent; \
+  chmod 0750 /home/patchdoll; \
+  chmod 0700 /home/agent; \
+  chmod 0755 /run/patchdoll; \
+  chmod 0750 /run/patchdoll/bridge; \
+  chmod 2750 /run/patchdoll/providers; \
+  chmod 2770 /workspace
 
 COPY --from=prod-deps --chown=patchdoll:patchdoll /app/package*.json ./
 COPY --from=prod-deps --chown=patchdoll:patchdoll /app/node_modules ./node_modules
 COPY --from=build --chown=patchdoll:patchdoll /app/dist ./dist
+COPY --from=peercred --chown=root:root /patchdoll-peercred /usr/local/bin/patchdoll-peercred
 COPY --chown=root:root scripts/entrypoint.sh /usr/local/bin/entrypoint
-RUN chmod 0555 /usr/local/bin/entrypoint
+RUN chmod 0555 /usr/local/bin/entrypoint /usr/local/bin/patchdoll-peercred
 
 # Bake the provider into the image as the single source of truth. config.ts and
 # the entrypoint read PROVIDER; there is no runtime override.
@@ -103,6 +117,6 @@ ENV PATH="/app/node_modules/.bin:${PATH}" \
   DISABLE_AUTOUPDATER=1
 
 EXPOSE 3000
-USER patchdoll
-ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/entrypoint"]
+STOPSIGNAL SIGTERM
+ENTRYPOINT ["/usr/bin/tini", "-g", "--", "/usr/local/bin/entrypoint"]
 CMD ["node", "dist/bridge.js"]

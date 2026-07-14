@@ -7,9 +7,10 @@
 // lives in focused modules:
 //
 //   config.ts  – environment configuration and shared helpers (env-only)
-//   agent.ts   – the AgentProvider interface + the active provider
-//   codex.ts   – Codex invocation + `codex exec` event stream
-//   claude.ts  – Claude Code invocation + stream-json output
+//   agent.ts   – bridge-side proxy for the provider worker
+//   providerSocket.ts – authenticated Unix-socket protocol
+//   worker.ts  – agent-UID worker entry point
+//   codex.ts / claude.ts – provider invocation + event streams
 //   stream.ts  – shared NDJSON line buffering for both providers
 //   mcp.ts     – the MCP server the agent talks to (GitHub access tool)
 //   prompt.ts  – the agent preamble handed to the model

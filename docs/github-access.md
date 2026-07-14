@@ -5,18 +5,20 @@ to the model.
 
 ## How it works
 
-1. Codex calls the `patchdoll_enable_github` MCP tool (the bridge exposes it). This
-   installs a bridge-owned git credential helper and writes the commit identity
-   to the provider home global git config.
-2. When Codex later runs `git push`, git invokes that helper, which makes a
+1. The agent calls the `patchdoll_enable_github` MCP tool. The bridge validates
+   its GitHub App credentials and installs a bridge-owned git credential helper.
+2. Over the authenticated provider socket, the bridge asks the `agent`-owned
+   worker to write the bot identity and helper path to the agent's global git
+   config. The resulting files are owned by the real `agent` UID.
+3. When the agent later runs `git push`, git invokes that helper, which makes a
    loopback request to the bridge's `GET /github/credential` endpoint.
-3. The bridge mints (or reuses, for 30 minutes) a short-lived **GitHub App
+4. The bridge mints (or reuses, for 30 minutes) a short-lived **GitHub App
    installation token** and hands it straight to git.
 
-The token is never returned to the model, so it can't leak into the transcript,
-a Slack reply, or `.git/config`. Codex only needs to call
-`patchdoll_enable_github` once per container filesystem; after that the agent's
-git config invokes the helper when needed.
+The MCP tool never returns the token and it is not stored in the transcript, a
+Slack reply, or `.git/config`; the helper hands it directly to git on demand.
+The agent only needs to call `patchdoll_enable_github` once per container
+runtime; after that its git config invokes the helper when needed.
 
 ## Configuration
 
@@ -57,7 +59,10 @@ returns an error and Codex simply runs without GitHub access.
 
 ## Security note
 
-The `GET /github/credential` endpoint is bound to loopback only. On the trusted
-single-user device this is sufficient; any local process already runs with the
-same privileges. If you later harden this, add a per-helper shared secret that
-the endpoint checks.
+GitHub App secrets remain only in the `patchdoll` bridge environment; the
+provider worker never receives them. The bridge-owned helper is readable and
+executable by the shared IPC group but not writable by `agent`.
+
+The `GET /github/credential` endpoint is loopback-only by default. An agent with
+GitHub enabled can intentionally cause git to obtain a short-lived installation
+token, so GitHub App repository permissions remain the authorization boundary.
