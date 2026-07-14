@@ -5,13 +5,13 @@
 // Configuration is env-only (see config.ts): there are no mutable settings and
 // no settings tools — `codexSettings` is resolved once at startup.
 
-import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 
 import { codexAgentEnv, codexBin, codexSettings, codexTimeoutMs, mcpUrl, type CodexSettings } from "./config.js";
 import { log } from "./log.js";
+import { runProcess } from "./process.js";
 import { createLineParser, parseJsonObject } from "./stream.js";
 import type { AgentProvider, AgentRunRequest, AgentRunResult } from "./agent.js";
 
@@ -70,49 +70,33 @@ export async function runCodex({ prompt, cwd, model, onProgress }: AgentRunReque
   });
 
   try {
-    const child = spawn(codexBin, args, {
-      cwd,
-      env: codexAgentEnv(),
-      stdio: ["pipe", "pipe", "pipe"]
-    });
-
-    let stdout = "";
-    let stderr = "";
     const parser = createLineParser((line) => {
       const note = progressNoteFromEvent(line);
       if (note) onProgress?.(note);
     });
-    const timer = setTimeout(() => child.kill("SIGTERM"), codexTimeoutMs);
-
-    child.stdout.setEncoding("utf8");
-    child.stderr.setEncoding("utf8");
-
-    child.stdout.on("data", (chunk: string) => {
-      stdout += chunk;
-      if (onProgress) parser.push(chunk);
+    const result = await runProcess({
+      command: codexBin,
+      args,
+      cwd,
+      env: codexAgentEnv(),
+      timeoutMs: codexTimeoutMs,
+      input: prompt,
+      onStdout: onProgress ? parser.push : undefined
     });
-
-    child.stderr.on("data", (chunk: string) => {
-      stderr += chunk;
-    });
-
-    child.stdin.end(prompt);
-
-    const { code, signal } = await new Promise<{ code: number | null; signal: NodeJS.Signals | null }>(
-      (resolveChild, reject) => {
-        child.once("error", reject);
-        child.once("close", (exitCode, exitSignal) => resolveChild({ code: exitCode, signal: exitSignal }));
-      }
-    );
-    clearTimeout(timer);
     if (onProgress) parser.flush();
 
     // The canonical final answer comes from the --output-last-message file.
     const message = await readFile(lastMessagePath, "utf8").catch(() => "");
 
-    log.debug("codex finished", { runId, code, signal, messageChars: message.length, stderrChars: stderr.length });
+    log.debug("codex finished", {
+      runId,
+      code: result.code,
+      signal: result.signal,
+      messageChars: message.length,
+      stderrChars: result.stderr.length
+    });
 
-    return { runId, code, signal, settings: codexSettings, message, stdout, stderr };
+    return { runId, ...result, settings: codexSettings, message };
   } finally {
     await rm(tempDir, { force: true, recursive: true });
   }

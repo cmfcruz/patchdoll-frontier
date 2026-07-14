@@ -1,20 +1,30 @@
-import { spawn } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { execFile } from "node:child_process";
 import { chmod, rm } from "node:fs/promises";
 import { createServer, type Socket } from "node:net";
+import { promisify } from "node:util";
 
-import type { AgentProvider } from "./agent.js";
-import { gitAgentEnv, messageOf, provider, providerSocketPath } from "./config.js";
+import { claudeProvider } from "./claude.js";
+import { codexProvider } from "./codex.js";
+import {
+  gitAgentEnv,
+  githubCredentialHelperPath,
+  messageOf,
+  provider,
+  providerSocketPath
+} from "./config.js";
 import { log } from "./log.js";
 import { readPeerCredentials } from "./peercred.js";
 import { parseWorkerRequest, readWorkerLine, writeWorkerMessage } from "./providerSocket.js";
 
-export async function startProviderWorker(agent: AgentProvider): Promise<void> {
-  const bridge = accountFor("patchdoll");
+const execFileAsync = promisify(execFile);
+const agent = provider === "claude" ? claudeProvider : codexProvider;
+
+async function startProviderWorker(): Promise<void> {
+  const bridge = bridgeCredentials();
   await rm(providerSocketPath, { force: true });
 
   const server = createServer((socket) => {
-    handleConnection(socket, agent, bridge.uid, bridge.gid).catch((error) => {
+    handleConnection(socket, bridge.uid, bridge.gid).catch((error) => {
       if (!socket.destroyed) {
         writeWorkerMessage(socket, { type: "error", error: messageOf(error) });
         socket.end();
@@ -53,7 +63,6 @@ export async function startProviderWorker(agent: AgentProvider): Promise<void> {
 
 async function handleConnection(
   socket: Socket,
-  agent: AgentProvider,
   allowedUid: number,
   allowedGid: number
 ): Promise<void> {
@@ -72,40 +81,29 @@ async function handleConnection(
     });
     writeWorkerMessage(socket, { type: "result", result });
   } else {
-    await configureGithub(request.helperPath, request.identity);
+    await configureGithub(request.identity);
     writeWorkerMessage(socket, { type: "configured" });
   }
   socket.end();
 }
 
-async function configureGithub(helperPath: string, identity: { name: string; email: string }): Promise<void> {
-  const helper = `!node ${helperPath}`;
+async function configureGithub(identity: { name: string; email: string }): Promise<void> {
+  const helper = `!node ${githubCredentialHelperPath}`;
   await gitConfig("credential.helper", helper);
   await gitConfig("credential.https://github.com.helper", helper);
   await gitConfig("user.name", identity.name);
   await gitConfig("user.email", identity.email);
 }
 
-function gitConfig(key: string, value: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const child = spawn("git", ["config", "--global", "--replace-all", key, value], {
-      env: gitAgentEnv(),
-      stdio: "ignore"
-    });
-    child.once("error", reject);
-    child.once("close", (code) =>
-      code === 0 ? resolve() : reject(new Error(`git config ${key} exited with code ${code}`))
-    );
-  });
+async function gitConfig(key: string, value: string): Promise<void> {
+  await execFileAsync("git", ["config", "--global", "--replace-all", key, value], { env: gitAgentEnv() });
 }
 
-function accountFor(name: string): { uid: number; gid: number } {
-  for (const line of readFileSync("/etc/passwd", "utf8").split(/\r?\n/)) {
-    const fields = line.split(":");
-    if (fields[0] !== name) continue;
-    const uid = Number.parseInt(fields[2], 10);
-    const gid = Number.parseInt(fields[3], 10);
-    if (Number.isInteger(uid) && Number.isInteger(gid)) return { uid, gid };
-  }
-  throw new Error(`Unable to resolve Unix account ${name}`);
+function bridgeCredentials(): { uid: number; gid: number } {
+  const uid = Number(process.env.PATCHDOLL_BRIDGE_UID);
+  const gid = Number(process.env.PATCHDOLL_BRIDGE_GID);
+  if (!Number.isInteger(uid) || !Number.isInteger(gid)) throw new Error("Invalid bridge credentials");
+  return { uid, gid };
 }
+
+await startProviderWorker();

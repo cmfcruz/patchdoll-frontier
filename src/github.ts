@@ -22,11 +22,12 @@ import { dirname } from "node:path";
 import {
   githubAppId,
   githubConfigured,
+  githubCredentialHelperPath,
   githubInstallationId,
   githubPrivateKeyBase64,
   port
 } from "./config.js";
-import { configureAgentGithub } from "./agent.js";
+import { configureWorkerGithub, type GitIdentity } from "./providerSocket.js";
 
 const GITHUB_API_URL = "https://api.github.com";
 const GITHUB_API_VERSION = "2022-11-28";
@@ -34,10 +35,6 @@ const GITHUB_API_VERSION = "2022-11-28";
 // Reuse a minted token for 30 minutes. GitHub installation tokens live ~1 hour,
 // so this leaves comfortable margin while avoiding a mint on every git auth.
 const TOKEN_FRESHNESS_MS = 30 * 60 * 1000;
-
-const helperPath = "/run/patchdoll/bridge/git-credential-patchdoll.cjs";
-
-type GitIdentity = { name: string; email: string };
 
 let cached: { token: string; fetchedAt: number } | undefined;
 let cachedIdentity: GitIdentity | undefined;
@@ -59,7 +56,7 @@ export async function enableGithubAccess(): Promise<string> {
   const identity = await resolveGitIdentity(token);
 
   await writeCredentialHelper();
-  await configureAgentGithub(helperPath, identity);
+  await configureWorkerGithub(identity);
 
   return `GitHub access enabled as ${identity.name} <${identity.email}>. git commits and pushes to github.com now authenticate via a short-lived installation token.`;
 }
@@ -191,10 +188,11 @@ require("node:http")
   .end();
 `;
 
-  await mkdir(dirname(helperPath), { recursive: true, mode: 0o750 });
-  await chmod(dirname(helperPath), 0o750);
-  await writeFile(helperPath, script, { mode: 0o550 });
-  await chmod(helperPath, 0o550);
+  const helperDir = dirname(githubCredentialHelperPath);
+  await mkdir(helperDir, { recursive: true, mode: 0o750 });
+  await chmod(helperDir, 0o750);
+  await writeFile(githubCredentialHelperPath, script, { mode: 0o550 });
+  await chmod(githubCredentialHelperPath, 0o550);
 }
 
 function base64UrlJson(value: unknown): string {

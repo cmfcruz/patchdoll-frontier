@@ -9,7 +9,7 @@
 //   config.ts  – environment configuration and shared helpers (env-only)
 //   agent.ts   – bridge-side proxy for the provider worker
 //   providerSocket.ts – authenticated Unix-socket protocol
-//   worker.ts  – agent-UID worker entry point
+//   providerWorker.ts – agent-UID worker server and entry point
 //   codex.ts / claude.ts – provider invocation + event streams
 //   stream.ts  – shared NDJSON line buffering for both providers
 //   mcp.ts     – the MCP server the agent talks to (GitHub access tool)

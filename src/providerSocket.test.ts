@@ -12,13 +12,11 @@ test("worker protocol parses run and GitHub configuration requests", () => {
     parseWorkerRequest(
       JSON.stringify({
         type: "configure-github",
-        helperPath: "/run/patchdoll/bridge/helper",
         identity: { name: "bot", email: "bot@example.com" }
       })
     ),
     {
       type: "configure-github",
-      helperPath: "/run/patchdoll/bridge/helper",
       identity: { name: "bot", email: "bot@example.com" }
     }
   );

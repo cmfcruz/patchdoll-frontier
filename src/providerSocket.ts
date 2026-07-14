@@ -1,7 +1,9 @@
 import { createConnection, type Socket } from "node:net";
 
 import { messageOf, provider, providerSocketPath } from "./config.js";
-import type { AgentRunRequest, AgentRunResult, GitIdentity } from "./agent.js";
+import type { AgentRunRequest, AgentRunResult } from "./agent.js";
+
+export type GitIdentity = { name: string; email: string };
 
 export type WorkerRequest =
   | {
@@ -10,7 +12,6 @@ export type WorkerRequest =
     }
   | {
       type: "configure-github";
-      helperPath: string;
       identity: GitIdentity;
     };
 
@@ -33,8 +34,8 @@ export function runProviderWorker(request: AgentRunRequest, timeoutMs: number): 
   });
 }
 
-export function configureWorkerGithub(helperPath: string, identity: GitIdentity): Promise<void> {
-  return exchangeWorker({ type: "configure-github", helperPath, identity }, 30000).then((message) => {
+export function configureWorkerGithub(identity: GitIdentity): Promise<void> {
+  return exchangeWorker({ type: "configure-github", identity }, 30000).then((message) => {
     if (message.type !== "configured") throw new Error(`${provider} worker returned an unexpected response`);
   });
 }
@@ -117,11 +118,11 @@ export function parseWorkerRequest(line: string): WorkerRequest {
     }
     return { type: "run", request: { prompt, cwd, model } };
   }
-  if (value.type === "configure-github" && typeof value.helperPath === "string" && isObject(value.identity)) {
+  if (value.type === "configure-github" && isObject(value.identity)) {
     const name = value.identity.name;
     const email = value.identity.email;
     if (typeof name === "string" && typeof email === "string") {
-      return { type: "configure-github", helperPath: value.helperPath, identity: { name, email } };
+      return { type: "configure-github", identity: { name, email } };
     }
   }
   throw new Error("Invalid worker request");
@@ -133,18 +134,7 @@ export function parseWorkerMessage(line: string): WorkerMessage {
   if (value.type === "error" && typeof value.error === "string") return { type: "error", error: value.error };
   if (value.type === "configured") return { type: "configured" };
   if (value.type === "result" && isObject(value.result)) {
-    const result = value.result;
-    if (
-      typeof result.runId === "string" &&
-      (typeof result.code === "number" || result.code === null) &&
-      (typeof result.signal === "string" || result.signal === null) &&
-      isObject(result.settings) &&
-      typeof result.message === "string" &&
-      typeof result.stdout === "string" &&
-      typeof result.stderr === "string"
-    ) {
-      return { type: "result", result: result as unknown as AgentRunResult };
-    }
+    return { type: "result", result: value.result as unknown as AgentRunResult };
   }
   throw new Error("Invalid worker message");
 }

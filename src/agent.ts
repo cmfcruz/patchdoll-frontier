@@ -16,7 +16,7 @@ import {
   providerTimeoutMs,
   type Provider
 } from "./config.js";
-import { configureWorkerGithub, runProviderWorker } from "./providerSocket.js";
+import { runProviderWorker } from "./providerSocket.js";
 
 /** A short, human-readable progress note streamed while the agent works. */
 export type ProgressNote = (note: string) => void;
@@ -62,10 +62,3 @@ export const agent: AgentProvider = {
     return runProviderWorker(request, providerTimeoutMs + 5000);
   }
 };
-
-export type GitIdentity = { name: string; email: string };
-
-/** Ask the agent-owned worker to update the agent-owned global git config. */
-export function configureAgentGithub(helperPath: string, identity: GitIdentity): Promise<void> {
-  return configureWorkerGithub(helperPath, identity);
-}

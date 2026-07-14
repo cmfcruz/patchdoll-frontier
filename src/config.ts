@@ -44,6 +44,7 @@ export const workspace = resolve("/workspace");
 export const agentHome = "/home/agent";
 export const agentPath = "/app/node_modules/.bin:/usr/local/bin:/usr/bin:/bin";
 export const providerSocketPath = `/run/patchdoll/providers/${provider}.sock`;
+export const githubCredentialHelperPath = "/run/patchdoll/bridge/git-credential-patchdoll.cjs";
 const agentTerm = process.env.TERM?.trim() || "xterm-256color";
 
 // URL the agent uses to reach the Patchdoll MCP server we expose from this same

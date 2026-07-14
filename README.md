@@ -28,12 +28,12 @@ trusted from the request payload.
 | `bridge.ts`  | HTTP entry point: `/health`, read-only `/settings`, `/mcp`, `/github/credential`, plus startup/shutdown. |
 | `agent.ts`   | The `AgentProvider` interface and bridge-side worker proxy. |
 | `providerSocket.ts` | NDJSON request/progress/result protocol over the provider Unix socket. |
-| `providerWorker.ts` | Agent-owned socket server, peer-credential check, and agent-owned git configuration. |
+| `providerWorker.ts` | Agent-owned socket server/entry point, peer-credential check, and agent-owned git configuration. |
 | `peercred.ts` | Wrapper around the tiny `SO_PEERCRED` helper. |
-| `worker.ts` | Provider-worker entry point running as the `agent` UID. |
-| `config.ts`  | All environment-derived configuration, resolved once. The only module that reads `process.env`. |
+| `config.ts`  | User-facing environment configuration, resolved once. |
 | `codex.ts`   | Builds and runs `codex exec` with a scrubbed agent environment; maps its `--json` events to progress notes. |
 | `claude.ts`  | Builds and runs `claude` (`stream-json`) with a scrubbed agent environment; maps its events to progress notes. |
+| `process.ts` | Shared provider subprocess lifecycle, output capture, and timeout handling. |
 | `stream.ts`  | Shared NDJSON line buffering used by both providers. |
 | `mcp.ts`     | Minimal MCP server exposing the single `patchdoll_enable_github` tool. |
 | `github.ts`  | On-demand GitHub App installation token + git credential helper. |

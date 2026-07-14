@@ -108,6 +108,8 @@ agent_env=(
   "LOGNAME=agent"
   "CODEX_HOME=/home/agent"
   "CLAUDE_CONFIG_DIR=/home/agent"
+  "PATCHDOLL_BRIDGE_UID=$(id -u patchdoll)"
+  "PATCHDOLL_BRIDGE_GID=$(id -g patchdoll)"
 )
 
 for name in \
@@ -154,7 +156,7 @@ else
   log "No Claude Code credential found; set CLAUDE_CODE_OAUTH_TOKEN or ANTHROPIC_API_KEY"
 fi
 
-run_as_session agent "${agent_env[@]}" node /app/dist/worker.js &
+run_as_session agent "${agent_env[@]}" node /app/dist/providerWorker.js &
 worker_pid=$!
 
 socket_path="/run/patchdoll/providers/${provider}.sock"

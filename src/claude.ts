@@ -11,7 +11,6 @@
 // Configuration is env-only (see config.ts): no mutable settings, no settings
 // tools — `claudeSettings` is resolved once at startup.
 
-import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 
 import {
@@ -24,6 +23,7 @@ import {
   type ClaudeSettings
 } from "./config.js";
 import { log } from "./log.js";
+import { runProcess } from "./process.js";
 import { createLineParser, parseJsonObject } from "./stream.js";
 import type { AgentProvider, AgentRunRequest, AgentRunResult, ProgressNote } from "./agent.js";
 
@@ -74,14 +74,6 @@ export async function runClaude({ prompt, cwd, model, onProgress }: AgentRunRequ
     prompt: prompt.length > 2000 ? `${prompt.slice(0, 2000)}…[+${prompt.length - 2000} chars]` : prompt
   });
 
-  const child = spawn(claudeBin, args, {
-    cwd,
-    env: claudeAgentEnv(),
-    stdio: ["ignore", "pipe", "pipe"]
-  });
-
-  let stdout = "";
-  let stderr = "";
   let resultLine = "";
   const parser = createLineParser((line) => {
     const obj = parseJsonObject(line);
@@ -92,36 +84,29 @@ export async function runClaude({ prompt, cwd, model, onProgress }: AgentRunRequ
       emitAssistantProgress(obj, onProgress);
     }
   });
-  const timer = setTimeout(() => child.kill("SIGTERM"), claudeTimeoutMs);
-
-  child.stdout.setEncoding("utf8");
-  child.stderr.setEncoding("utf8");
-
-  child.stdout.on("data", (chunk: string) => {
-    stdout += chunk;
-    parser.push(chunk);
+  const result = await runProcess({
+    command: claudeBin,
+    args,
+    cwd,
+    env: claudeAgentEnv(),
+    timeoutMs: claudeTimeoutMs,
+    onStdout: parser.push
   });
-
-  child.stderr.on("data", (chunk: string) => {
-    stderr += chunk;
-  });
-
-  const { code, signal } = await new Promise<{ code: number | null; signal: NodeJS.Signals | null }>(
-    (resolveChild, reject) => {
-      child.once("error", reject);
-      child.once("close", (exitCode, exitSignal) => resolveChild({ code: exitCode, signal: exitSignal }));
-    }
-  );
-  clearTimeout(timer);
 
   // Flush any partial line still buffered, then take the final answer from the
   // last `type: "result"` line of the stream.
   parser.flush();
   const message = messageFromResult(resultLine);
 
-  log.debug("claude finished", { runId, code, signal, messageChars: message.length, stderrChars: stderr.length });
+  log.debug("claude finished", {
+    runId,
+    code: result.code,
+    signal: result.signal,
+    messageChars: message.length,
+    stderrChars: result.stderr.length
+  });
 
-  return { runId, code, signal, settings: claudeSettings, message, stdout, stderr };
+  return { runId, ...result, settings: claudeSettings, message };
 }
 
 // Forward an `assistant` event's content blocks as progress notes: tool activity
