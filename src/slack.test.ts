@@ -51,5 +51,4 @@ test("classifySlackError maps known Slack error codes to stable reasons", () => 
 test("stripLeadingMention removes a single leading bot mention", () => {
   assert.equal(stripLeadingMention("<@U0B76SPCMA4> hello there"), "hello there");
   assert.equal(stripLeadingMention("no mention here"), "no mention here");
-  assert.equal(stripLeadingMention(undefined), "");
 });

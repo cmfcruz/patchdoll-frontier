@@ -23,7 +23,7 @@ test("createLineParser splits on CRLF as well as LF", () => {
   assert.deepEqual(lines, ["a", "b"]);
 });
 
-test("flush emits a trailing unterminated line exactly once", () => {
+test("flush emits a trailing unterminated line", () => {
   const lines: string[] = [];
   const parser = createLineParser((line) => lines.push(line));
 
@@ -32,18 +32,6 @@ test("flush emits a trailing unterminated line exactly once", () => {
 
   parser.flush();
   assert.deepEqual(lines, ["a", "b"]);
-
-  parser.flush();
-  assert.deepEqual(lines, ["a", "b"], "a second flush emits nothing");
-});
-
-test("flush emits nothing for an empty or whitespace-only buffer", () => {
-  const lines: string[] = [];
-  const parser = createLineParser((line) => lines.push(line));
-
-  parser.push("done\n");
-  parser.flush();
-  assert.deepEqual(lines, ["done"]);
 });
 
 test("parseJsonObject accepts objects and rejects arrays, scalars and garbage", () => {

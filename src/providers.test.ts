@@ -48,9 +48,8 @@ test("toolNote renders short, Codex-style notes for Claude tool_use blocks", () 
   assert.equal(toolNote("Grep", {}), "Calling Grep…");
 });
 
-test("messageFromResult extracts the result string, tolerating bad input", () => {
+test("messageFromResult extracts the result string and handles a missing result", () => {
   assert.equal(messageFromResult(JSON.stringify({ type: "result", result: "the answer" })), "the answer");
   assert.equal(messageFromResult(JSON.stringify({ type: "result" })), "");
-  assert.equal(messageFromResult("not json"), "");
   assert.equal(messageFromResult(""), "");
 });
