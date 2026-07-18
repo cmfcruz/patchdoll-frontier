@@ -1,0 +1,7 @@
+{
+  // Production build: same as the base config but excludes the *.test.ts files
+  // so test code never ships in dist/. `npm test` compiles the base config
+  // (tests included) to a throwaway dist-test/ and runs node --test there.
+  "extends": "./tsconfig.json",
+  "exclude": ["src/**/*.test.ts"]
+}

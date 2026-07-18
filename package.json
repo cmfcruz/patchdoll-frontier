@@ -1,0 +1,30 @@
+{
+  "name": "eucleia",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Env-configured communications bridge that runs Codex or Claude Code on request.",
+  "type": "module",
+  "scripts": {
+    "start": "node dist/bridge.js",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "build": "tsc -p tsconfig.build.json",
+    "test": "rm -rf dist-test && tsc -p tsconfig.json --outDir dist-test && PROVIDER=codex node --test \"dist-test/**/*.test.js\""
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-code": "2.1.207",
+    "@openai/codex": "0.144.3",
+    "@slack/bolt": "4.7.3"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "typescript": "5.9.3"
+  },
+  "overrides": {
+    "body-parser": "2.2.2",
+    "axios": "1.17.0",
+    "qs": "6.15.2"
+  }
+}
