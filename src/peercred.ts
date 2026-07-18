@@ -6,7 +6,7 @@ export type PeerCredentials = { pid: number; uid: number; gid: number };
 /** Read kernel-authenticated credentials for the process at the other end. */
 export function readPeerCredentials(
   socket: Socket,
-  helperPath = "/usr/local/bin/patchdoll-peercred"
+  helperPath = "/usr/local/bin/eucleia-peercred"
 ): Promise<PeerCredentials> {
   const fd = socketFd(socket);
   if (fd === undefined) throw new Error("Unable to inspect Unix socket file descriptor");

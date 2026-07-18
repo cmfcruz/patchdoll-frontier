@@ -2,7 +2,7 @@
 //
 // Listens for @mentions and direct messages, runs the agent to answer them, and
 // streams the result back into Slack. The delivery model is borrowed from
-// Patchdoll's adapter: post a placeholder, edit it with throttled progress notes
+// Eucleia's adapter: post a placeholder, edit it with throttled progress notes
 // while the agent works, then replace it with the final answer (splitting long
 // replies across follow-up messages).
 
@@ -54,7 +54,7 @@ type SlackThreadContext = {
 
 const initialProgressText = "hmm?";
 const requestFailurePrefix = "That's annoying, but manageable";
-const fallbackReply = "Patchdoll handled the request.";
+const fallbackReply = "Eucleia handled the request.";
 
 // Control characters Slack rejects. The "keep newlines" variant preserves tab
 // and newline so final replies keep their formatting; the strict variant strips

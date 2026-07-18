@@ -50,27 +50,27 @@ trap 'terminate_children; exit 143' SIGTERM
 trap 'terminate_children; exit 130' SIGINT
 
 prepare_runtime_dirs() {
-  mkdir -p /home/agent /home/patchdoll /run/patchdoll/bridge /run/patchdoll/providers /workspace
+  mkdir -p /home/agent /home/eucleia /run/eucleia/bridge /run/eucleia/providers /workspace
 
   # Migrate persistent volumes on every start. Agent state and workspace files
   # are owned by the UID that actually runs the provider, never by the bridge.
   chown -R agent:agent /home/agent
   chmod -R u+rwX,go-rwx /home/agent
-  chown patchdoll:patchdoll /home/patchdoll
-  chmod 0750 /home/patchdoll
+  chown eucleia:eucleia /home/eucleia
+  chmod 0750 /home/eucleia
 
-  chown -R agent:patchdoll-ipc /workspace
+  chown -R agent:eucleia-ipc /workspace
   chmod -R g+rwX /workspace
   find /workspace -type d -exec chmod g+s {} +
 
-  rm -rf /run/patchdoll/bridge /run/patchdoll/providers
-  mkdir -p /run/patchdoll/bridge /run/patchdoll/providers
-  chown root:root /run/patchdoll
-  chown patchdoll:patchdoll-ipc /run/patchdoll/bridge
-  chown agent:patchdoll-ipc /run/patchdoll/providers
-  chmod 0755 /run/patchdoll
-  chmod 0750 /run/patchdoll/bridge
-  chmod 2750 /run/patchdoll/providers
+  rm -rf /run/eucleia/bridge /run/eucleia/providers
+  mkdir -p /run/eucleia/bridge /run/eucleia/providers
+  chown root:root /run/eucleia
+  chown eucleia:eucleia-ipc /run/eucleia/bridge
+  chown agent:eucleia-ipc /run/eucleia/providers
+  chmod 0755 /run/eucleia
+  chmod 0750 /run/eucleia/bridge
+  chmod 2750 /run/eucleia/providers
 }
 
 provider="${PROVIDER:-}"
@@ -95,9 +95,9 @@ common_env=(
 
 bridge_env=(
   "${common_env[@]}"
-  "HOME=/home/patchdoll"
-  "USER=patchdoll"
-  "LOGNAME=patchdoll"
+  "HOME=/home/eucleia"
+  "USER=eucleia"
+  "LOGNAME=eucleia"
   "HOST=${HOST:-127.0.0.1}"
 )
 
@@ -108,8 +108,8 @@ agent_env=(
   "LOGNAME=agent"
   "CODEX_HOME=/home/agent"
   "CLAUDE_CONFIG_DIR=/home/agent"
-  "PATCHDOLL_BRIDGE_UID=$(id -u patchdoll)"
-  "PATCHDOLL_BRIDGE_GID=$(id -g patchdoll)"
+  "EUCLEIA_BRIDGE_UID=$(id -u eucleia)"
+  "EUCLEIA_BRIDGE_GID=$(id -g eucleia)"
 )
 
 for name in \
@@ -159,7 +159,7 @@ fi
 run_as_session agent "${agent_env[@]}" node /app/dist/providerWorker.js &
 worker_pid=$!
 
-socket_path="/run/patchdoll/providers/${provider}.sock"
+socket_path="/run/eucleia/providers/${provider}.sock"
 for _ in {1..100}; do
   if [[ -S "$socket_path" ]] && [[ "$(stat -c '%a' "$socket_path" 2>/dev/null)" == "660" ]]; then
     break
@@ -177,7 +177,7 @@ if [[ ! -S "$socket_path" ]] || [[ "$(stat -c '%a' "$socket_path" 2>/dev/null)" 
   exit 1
 fi
 
-run_as_session patchdoll "${bridge_env[@]}" "$@" &
+run_as_session eucleia "${bridge_env[@]}" "$@" &
 bridge_pid=$!
 
 # The children now own their deliberately separate copies of the environment.

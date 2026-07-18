@@ -1,11 +1,11 @@
 # GitHub access for Codex
 
-Patchdoll can let Codex push to GitHub **on demand** without ever exposing a token
+Eucleia can let Codex push to GitHub **on demand** without ever exposing a token
 to the model.
 
 ## How it works
 
-1. The agent calls the `patchdoll_enable_github` MCP tool. The bridge validates
+1. The agent calls the `eucleia_enable_github` MCP tool. The bridge validates
    its GitHub App credentials and installs a bridge-owned git credential helper.
 2. Over the authenticated provider socket, the bridge asks the `agent`-owned
    worker to write the bot identity and helper path to the agent's global git
@@ -17,7 +17,7 @@ to the model.
 
 The MCP tool never returns the token and it is not stored in the transcript, a
 Slack reply, or `.git/config`; the helper hands it directly to git on demand.
-The agent only needs to call `patchdoll_enable_github` once per container
+The agent only needs to call `eucleia_enable_github` once per container
 runtime; after that its git config invokes the helper when needed.
 
 ## Configuration
@@ -47,19 +47,19 @@ name:  <app-slug>[bot]
 email: <bot-user-id>+<app-slug>[bot]@users.noreply.github.com
 ```
 
-The bridge resolves this during `patchdoll_enable_github` via `GET /app` (for the
+The bridge resolves this during `eucleia_enable_github` via `GET /app` (for the
 slug) and `GET /users/<slug>[bot]` (for the id).
 
 There are no environment variables or runtime settings for overriding the git
 user name or email.
 
 The App's installation permissions (e.g. Contents: read & write) determine what
-Codex can do. If the `GITHUB_APP_*` variables are unset, `patchdoll_enable_github`
+Codex can do. If the `GITHUB_APP_*` variables are unset, `eucleia_enable_github`
 returns an error and Codex simply runs without GitHub access.
 
 ## Security note
 
-GitHub App secrets remain only in the `patchdoll` bridge environment; the
+GitHub App secrets remain only in the `eucleia` bridge environment; the
 provider worker never receives them. The bridge-owned helper is readable and
 executable by the shared IPC group but not writable by `agent`.
 

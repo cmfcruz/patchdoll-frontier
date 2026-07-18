@@ -23,12 +23,12 @@ export type PromptInput = {
 
 export function buildAgentPrompt(input: PromptInput): string {
   return [
-    `You are ${agent.displayName} running as Patchdoll for a Slack request.`,
+    `You are ${agent.displayName} running as Eucleia for a Slack request.`,
     "Reply with a concise, Slack-ready answer.",
     "If you change files, include the changed paths and any checks you ran.",
-    "Patchdoll is configured by environment variables only; it has no runtime settings to change.",
+    "Eucleia is configured by environment variables only; it has no runtime settings to change.",
     githubConfigured()
-      ? "Before committing or pushing to github.com, call the Patchdoll MCP tool `patchdoll_enable_github` once; it sets the bot's git identity and credentials so normal git commands work."
+      ? "Before committing or pushing to github.com, call the Eucleia MCP tool `eucleia_enable_github` once; it sets the bot's git identity and credentials so normal git commands work."
       : undefined,
     "",
     `Slack event type: ${input.type}`,

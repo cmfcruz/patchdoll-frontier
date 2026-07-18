@@ -1,21 +1,22 @@
-# patchdoll
+# eucleia
 
 A tiny communications bridge that runs **Codex** or **Claude Code** on request.
 It listens for Slack @mentions and DMs, runs the configured agent against the
 `/workspace` tree, and streams the result back into Slack.
 
-This is the env-only frontier rebuild of the Patchdoll bridge: **all configuration
+Eucleia is an env-only rebuild of the upstream
+[Patchdoll](https://github.com/stabledaemons/patchdoll) bridge: **all configuration
 comes from environment variables**. There is no settings file and no runtime
 mutation — to change the model or effort, restart with different env vars.
 
 ## Architecture
 
 One provider is baked into each image variant (`PROVIDER`). A root startup
-supervisor launches the communications bridge as `patchdoll` and the provider
+supervisor launches the communications bridge as `eucleia` and the provider
 worker as `agent`; after startup, neither child has privilege-changing powers.
 
 ```text
-tini -> root supervisor -> bridge (patchdoll UID)
+tini -> root supervisor -> bridge (eucleia UID)
                        `-> provider worker (agent UID) -> Codex or Claude Code
 ```
 
@@ -35,7 +36,7 @@ trusted from the request payload.
 | `claude.ts`  | Builds and runs `claude` (`stream-json`) with a scrubbed agent environment; maps its events to progress notes. |
 | `process.ts` | Shared provider subprocess lifecycle, output capture, and timeout handling. |
 | `stream.ts`  | Shared NDJSON line buffering used by both providers. |
-| `mcp.ts`     | Minimal MCP server exposing the single `patchdoll_enable_github` tool. |
+| `mcp.ts`     | Minimal MCP server exposing the single `eucleia_enable_github` tool. |
 | `github.ts`  | On-demand GitHub App installation token + git credential helper. |
 | `prompt.ts`  | The agent preamble — the policy/context handed to the model. |
 | `slack.ts`   | Slack adapter and the throttled-edit / chunked-reply delivery model. |
@@ -75,7 +76,7 @@ Logging: `LOG_LEVEL` (`error|warn|info|debug`, default `info`).
 Slack (enables the adapter when both are set): `SLACK_BOT_TOKEN`,
 `SLACK_APP_TOKEN`. See [docs/slack-bot-setup.md](docs/slack-bot-setup.md).
 
-GitHub access (enables `patchdoll_enable_github` when all three are set):
+GitHub access (enables `eucleia_enable_github` when all three are set):
 `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`,
 `GITHUB_APP_PRIVATE_KEY_BASE64`. See [docs/github-access.md](docs/github-access.md).
 
@@ -87,7 +88,7 @@ Agent credentials:
   agent worker and Claude process because Claude Code needs them at run time
   unless stored auth is already configured.
 
-Slack and GitHub App secrets are passed only to the `patchdoll` bridge. Provider
+Slack and GitHub App secrets are passed only to the `eucleia` bridge. Provider
 credentials are passed only to the `agent` worker. The root supervisor clears
 its shell copies after both children start.
 

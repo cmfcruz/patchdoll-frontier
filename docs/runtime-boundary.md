@@ -1,6 +1,6 @@
-# Patchdoll runtime boundary
+# Eucleia runtime boundary
 
-Patchdoll's HTTP bridge is a local control plane for the agent, not a public API.
+Eucleia's HTTP bridge is a local control plane for the agent, not a public API.
 It receives Slack events and exposes the MCP and temporary GitHub credential
 endpoints used by the configured provider.
 
@@ -11,8 +11,8 @@ only startup ownership migration, provider authentication, privilege dropping,
 signal forwarding, and child reaping. It starts two long-lived children:
 
 ```text
-bridge          uid=patchdoll  gid=patchdoll  supplementary=patchdoll-ipc
-provider worker uid=agent      gid=agent      supplementary=patchdoll-ipc
+bridge          uid=eucleia  gid=eucleia  supplementary=eucleia-ipc
+provider worker uid=agent      gid=agent      supplementary=eucleia-ipc
 ```
 
 Both children are launched with `setpriv --reuid/--regid --init-groups`; setting
@@ -34,16 +34,16 @@ intentional and may recursively change legacy volume ownership.
 The bridge sends one NDJSON request per connection to:
 
 ```text
-/run/patchdoll/providers/<provider>.sock
+/run/eucleia/providers/<provider>.sock
 ```
 
 The worker streams progress messages followed by a result or error. The socket
-is owned by `agent:patchdoll-ipc` with mode `0660`. Before parsing a request, the
+is owned by `agent:eucleia-ipc` with mode `0660`. Before parsing a request, the
 worker asks the kernel for the peer process's PID, UID, and GID with
-`SO_PEERCRED`; only the `patchdoll` account is accepted. Protocol identity fields
+`SO_PEERCRED`; only the `eucleia` account is accepted. Protocol identity fields
 cannot spoof this check.
 
-`patchdoll_enable_github` keeps long-lived GitHub App secrets and token minting
+`eucleia_enable_github` keeps long-lived GitHub App secrets and token minting
 in the bridge. The bridge writes a read-only credential helper under its runtime
 directory, then asks the worker over the same authenticated socket to configure
 the agent-owned global git config. Git later obtains short-lived credentials

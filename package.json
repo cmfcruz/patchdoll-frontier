@@ -1,5 +1,5 @@
 {
-  "name": "patchdoll",
+  "name": "eucleia",
   "version": "0.0.0",
   "private": true,
   "description": "Env-configured communications bridge that runs Codex or Claude Code on request.",

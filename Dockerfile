@@ -30,8 +30,8 @@ RUN npm run build
 
 FROM deps AS peercred
 
-COPY tools/patchdoll-peercred.c ./patchdoll-peercred.c
-RUN cc -O2 -Wall -Wextra -o /patchdoll-peercred ./patchdoll-peercred.c
+COPY tools/eucleia-peercred.c ./eucleia-peercred.c
+RUN cc -O2 -Wall -Wextra -o /eucleia-peercred ./eucleia-peercred.c
 
 FROM deps AS prod-deps
 
@@ -81,36 +81,36 @@ RUN set -eux; \
   apt-get update; \
   apt-get install -y --no-install-recommends gh; \
   rm -rf /var/lib/apt/lists/*; \
-  groupadd --system patchdoll; \
-  groupadd --system patchdoll-ipc; \
+  groupadd --system eucleia; \
+  groupadd --system eucleia-ipc; \
   groupadd --system agent; \
-  useradd --system --create-home --home-dir /home/patchdoll --gid patchdoll --groups patchdoll-ipc patchdoll; \
-  useradd --system --create-home --home-dir /home/agent --gid agent --groups patchdoll-ipc agent; \
-  mkdir -p /run/patchdoll/bridge /run/patchdoll/providers /workspace; \
-  chown -R patchdoll:patchdoll /app /home/patchdoll; \
-  chown root:root /run/patchdoll; \
-  chown patchdoll:patchdoll-ipc /run/patchdoll/bridge; \
-  chown agent:patchdoll-ipc /run/patchdoll/providers /workspace; \
+  useradd --system --create-home --home-dir /home/eucleia --gid eucleia --groups eucleia-ipc eucleia; \
+  useradd --system --create-home --home-dir /home/agent --gid agent --groups eucleia-ipc agent; \
+  mkdir -p /run/eucleia/bridge /run/eucleia/providers /workspace; \
+  chown -R eucleia:eucleia /app /home/eucleia; \
+  chown root:root /run/eucleia; \
+  chown eucleia:eucleia-ipc /run/eucleia/bridge; \
+  chown agent:eucleia-ipc /run/eucleia/providers /workspace; \
   chown -R agent:agent /home/agent; \
-  chmod 0750 /home/patchdoll; \
+  chmod 0750 /home/eucleia; \
   chmod 0700 /home/agent; \
-  chmod 0755 /run/patchdoll; \
-  chmod 0750 /run/patchdoll/bridge; \
-  chmod 2750 /run/patchdoll/providers; \
+  chmod 0755 /run/eucleia; \
+  chmod 0750 /run/eucleia/bridge; \
+  chmod 2750 /run/eucleia/providers; \
   chmod 2770 /workspace
 
-COPY --from=prod-deps --chown=patchdoll:patchdoll /app/package*.json ./
-COPY --from=prod-deps --chown=patchdoll:patchdoll /app/node_modules ./node_modules
-COPY --from=build --chown=patchdoll:patchdoll /app/dist ./dist
-COPY --from=peercred --chown=root:root /patchdoll-peercred /usr/local/bin/patchdoll-peercred
+COPY --from=prod-deps --chown=eucleia:eucleia /app/package*.json ./
+COPY --from=prod-deps --chown=eucleia:eucleia /app/node_modules ./node_modules
+COPY --from=build --chown=eucleia:eucleia /app/dist ./dist
+COPY --from=peercred --chown=root:root /eucleia-peercred /usr/local/bin/eucleia-peercred
 COPY --chown=root:root scripts/entrypoint.sh /usr/local/bin/entrypoint
-RUN chmod 0555 /usr/local/bin/entrypoint /usr/local/bin/patchdoll-peercred
+RUN chmod 0555 /usr/local/bin/entrypoint /usr/local/bin/eucleia-peercred
 
 # Bake the provider into the image as the single source of truth. config.ts and
 # the entrypoint read PROVIDER; there is no runtime override.
 # DISABLE_AUTOUPDATER keeps the Claude Code CLI from self-updating (no-op for Codex).
 ENV PATH="/app/node_modules/.bin:${PATH}" \
-  HOME=/home/patchdoll \
+  HOME=/home/eucleia \
   HOST=127.0.0.1 \
   PORT=3000 \
   PROVIDER=${PROVIDER_VARIANT} \

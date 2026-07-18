@@ -43,11 +43,11 @@ export const logLevel: LogLevel = parseEnum("LOG_LEVEL", process.env.LOG_LEVEL, 
 export const workspace = resolve("/workspace");
 export const agentHome = "/home/agent";
 export const agentPath = "/app/node_modules/.bin:/usr/local/bin:/usr/bin:/bin";
-export const providerSocketPath = `/run/patchdoll/providers/${provider}.sock`;
-export const githubCredentialHelperPath = "/run/patchdoll/bridge/git-credential-patchdoll.cjs";
+export const providerSocketPath = `/run/eucleia/providers/${provider}.sock`;
+export const githubCredentialHelperPath = "/run/eucleia/bridge/git-credential-eucleia.cjs";
 const agentTerm = process.env.TERM?.trim() || "xterm-256color";
 
-// URL the agent uses to reach the Patchdoll MCP server we expose from this same
+// URL the agent uses to reach the Eucleia MCP server we expose from this same
 // process (the GitHub access tool). Always loopback — the MCP endpoint is a
 // local control-plane path, never a public interface, regardless of HOST.
 export const mcpUrl = `http://127.0.0.1:${port}/mcp`;
@@ -75,7 +75,7 @@ const validReasoningEfforts = new Set<ReasoningEffort>(["minimal", "low", "mediu
 const defaultCodexModel = "gpt-5.6-sol";
 
 // Resolved once from the environment. CODEX_MODEL/CODEX_REASONING_EFFORT are
-// optional; when unset, Patchdoll supplies the baked-in Codex default model.
+// optional; when unset, Eucleia supplies the baked-in Codex default model.
 export const codexSettings: CodexSettings = tidy({
   model: process.env.CODEX_MODEL?.trim() || defaultCodexModel,
   reasoningEffort: parseEnum(
@@ -114,7 +114,7 @@ export type ClaudeSettings = {
 const validClaudeEfforts = new Set<ClaudeEffort>(["low", "medium", "high", "xhigh", "max"]);
 const defaultClaudeModel = "claude-opus-4-8";
 
-// Resolved once from the environment, with Patchdoll defaults for the model and
+// Resolved once from the environment, with Eucleia defaults for the model and
 // effort. Env vars remain the only supported way to override them.
 export const claudeSettings: ClaudeSettings = tidy({
   model: process.env.CLAUDE_MODEL?.trim() || defaultClaudeModel,
@@ -127,7 +127,7 @@ const anthropicApiKey = process.env.ANTHROPIC_API_KEY?.trim() || undefined;
 export const providerTimeoutMs = provider === "claude" ? claudeTimeoutMs : codexTimeoutMs;
 
 // --- GitHub App (on-demand token for `git push`) ---
-// When all three are set, the agent can call the `patchdoll_enable_github` MCP tool
+// When all three are set, the agent can call the `eucleia_enable_github` MCP tool
 // to wire up a git credential helper that fetches a short-lived installation
 // token from this bridge on demand. The token is never handed to the model.
 export const githubAppId = process.env.GITHUB_APP_ID;
@@ -176,7 +176,7 @@ export function claudeAgentEnv(): NodeJS.ProcessEnv {
     CLAUDE_CODE_OAUTH_TOKEN: claudeCodeOauthToken,
     ANTHROPIC_API_KEY: anthropicApiKey,
     // Claude's native switch is disable-shaped. Only synthesize it when the
-    // Patchdoll override is explicit so an unset env keeps Claude's own default.
+    // Eucleia override is explicit so an unset env keeps Claude's own default.
     CLAUDE_CODE_DISABLE_AUTO_MEMORY:
       claudeSettings.memoryEnabled === undefined ? undefined : claudeSettings.memoryEnabled ? "0" : "1"
   });

@@ -100,8 +100,8 @@ async function gitConfig(key: string, value: string): Promise<void> {
 }
 
 function bridgeCredentials(): { uid: number; gid: number } {
-  const uid = Number(process.env.PATCHDOLL_BRIDGE_UID);
-  const gid = Number(process.env.PATCHDOLL_BRIDGE_GID);
+  const uid = Number(process.env.EUCLEIA_BRIDGE_UID);
+  const gid = Number(process.env.EUCLEIA_BRIDGE_GID);
   if (!Number.isInteger(uid) || !Number.isInteger(gid)) throw new Error("Invalid bridge credentials");
   return { uid, gid };
 }

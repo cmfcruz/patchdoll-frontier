@@ -33,9 +33,9 @@ export function buildCodexArgs(
     args.push("--config", `features.memories=${settings.memoryEnabled}`);
   }
 
-  // Expose the Patchdoll MCP server (the GitHub access tool) to Codex. A bare `url`
+  // Expose the Eucleia MCP server (the GitHub access tool) to Codex. A bare `url`
   // makes Codex use its streamable-HTTP MCP client automatically.
-  args.push("--config", `mcp_servers.patchdoll.url="${mcpUrl}"`);
+  args.push("--config", `mcp_servers.eucleia.url="${mcpUrl}"`);
 
   args.push(
     "--config",
@@ -54,7 +54,7 @@ export function buildCodexArgs(
 
 export async function runCodex({ prompt, cwd, model, onProgress }: AgentRunRequest): Promise<AgentRunResult> {
   const runId = randomUUID();
-  const tempDir = await mkdtemp(`${tmpdir()}/patchdoll-${runId}-`);
+  const tempDir = await mkdtemp(`${tmpdir()}/eucleia-${runId}-`);
   const lastMessagePath = `${tempDir}/last-message.txt`;
   const args = buildCodexArgs(codexSettings, model, lastMessagePath);
 

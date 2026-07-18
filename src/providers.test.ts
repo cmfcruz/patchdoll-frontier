@@ -20,7 +20,7 @@ test("progressNoteFromEvent maps Codex item.completed events to notes", () => {
     progressNoteFromEvent(JSON.stringify({ type: "item.completed", item }));
 
   assert.equal(note({ type: "command_execution", command: "ls -la" }), "$ ls -la");
-  assert.equal(note({ type: "mcp_tool_call", tool: "patchdoll_enable_github" }), "Calling patchdoll_enable_github…");
+  assert.equal(note({ type: "mcp_tool_call", tool: "eucleia_enable_github" }), "Calling eucleia_enable_github…");
   assert.equal(note({ type: "mcp_tool_call", name: "fallback_name" }), "Calling fallback_name…");
   assert.equal(note({ type: "file_change" }), "Editing files…");
   assert.equal(note({ type: "agent_message", text: "hello" }), "hello");
@@ -42,7 +42,7 @@ test("progressNoteFromEvent ignores non-events, wrong types and blank text", () 
 test("toolNote renders short, Codex-style notes for Claude tool_use blocks", () => {
   assert.equal(toolNote("Bash", { command: "npm test" }), "$ npm test");
   assert.equal(toolNote("Bash", {}), "Calling Bash…");
-  assert.equal(toolNote("mcp__patchdoll__enable_github", {}), "Calling mcp__patchdoll__enable_github…");
+  assert.equal(toolNote("mcp__eucleia__enable_github", {}), "Calling mcp__eucleia__enable_github…");
   assert.equal(toolNote("Edit", {}), "Editing files…");
   assert.equal(toolNote("Write", {}), "Editing files…");
   assert.equal(toolNote("Grep", {}), "Calling Grep…");

@@ -107,7 +107,7 @@ const slackApp = await startSlackApp();
 logGithubConfiguration();
 
 server.listen(port, host, () => {
-  log.info(`patchdoll bridge listening on ${host}:${port} (provider: ${agent.name}, log level: ${logLevel})`);
+  log.info(`eucleia bridge listening on ${host}:${port} (provider: ${agent.name}, log level: ${logLevel})`);
 });
 
 function logGithubConfiguration(): void {
@@ -126,7 +126,7 @@ process.once("SIGINT", () => void shutdown("SIGINT"));
 async function shutdown(signal: string): Promise<void> {
   if (shuttingDown) return;
   shuttingDown = true;
-  log.info(`patchdoll bridge stopping after ${signal}`);
+  log.info(`eucleia bridge stopping after ${signal}`);
 
   const forceExit = setTimeout(() => process.exit(1), 5000);
   forceExit.unref();

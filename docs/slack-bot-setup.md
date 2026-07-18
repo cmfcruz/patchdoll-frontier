@@ -1,18 +1,18 @@
 # Slack bot setup
 
-Short checklist for creating a Patchdoll Slack bot and connecting it to the
+Short checklist for creating a Eucleia Slack bot and connecting it to the
 container.
 
 ## 1. Create the Slack app
 
 1. Go to <https://api.slack.com/apps>.
 2. Create a new app from scratch.
-3. Pick the workspace that should run Patchdoll.
+3. Pick the workspace that should run Eucleia.
 4. In **Basic Information**, set the display name/icon however you want.
 
 ## 2. Enable Socket Mode
 
-Patchdoll uses Slack Socket Mode, so it does not need a public webhook URL.
+Eucleia uses Slack Socket Mode, so it does not need a public webhook URL.
 
 1. Open **Socket Mode**.
 2. Enable Socket Mode.
@@ -27,7 +27,7 @@ It should look like `xapp-...`.
 
 Open **OAuth & Permissions** and add these bot token scopes:
 
-- `app_mentions:read` — receive `@patchdoll` mentions
+- `app_mentions:read` — receive `@eucleia` mentions
 - `chat:write` — post replies
 - `channels:history` — read public channel thread context
 - `groups:history` — read private channel thread context
@@ -55,12 +55,12 @@ Open **Event Subscriptions**.
 
 ## 5. Pick an image variant
 
-Each Patchdoll image ships exactly one agent — there is no default and no combined
+Each Eucleia image ships exactly one agent — there is no default and no combined
 image. Choose the provider by selecting the matching tag:
 
 ```text
-ghcr.io/stabledaemons/patchdoll:latest-codex    # runs Codex CLI
-ghcr.io/stabledaemons/patchdoll:latest-claude   # runs Claude Code
+ghcr.io/cmfcruz/eucleia:latest-codex    # runs Codex CLI
+ghcr.io/cmfcruz/eucleia:latest-claude   # runs Claude Code
 ```
 
 The variant bakes `PROVIDER` into the image; you do not set it yourself.
@@ -83,7 +83,7 @@ bridge starts.
 
 ### Codex variant
 
-Patchdoll runs `codex login` during container startup.
+Eucleia runs `codex login` during container startup.
 
 For browser/device-code auth, do not set `OPENAI_API_KEY`. Watch the
 container logs, open the printed URL, and enter the device code. The login
@@ -117,7 +117,7 @@ ANTHROPIC_API_KEY=...         # Anthropic API key
 For channel mentions, invite the bot into each channel where it should respond:
 
 ```text
-/invite @patchdoll-daemon
+/invite @eucleia-daemon
 ```
 
 Direct messages should work once `message.im` is subscribed and the app is
