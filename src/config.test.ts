@@ -18,6 +18,8 @@ const envKeys = [
   "OPENAI_API_KEY",
   "SLACK_BOT_TOKEN",
   "SLACK_APP_TOKEN",
+  "EUCLEIA_ADMINS",
+  "EUCLEIA_TRUSTED_USERS",
   "GITHUB_APP_ID",
   "GITHUB_APP_INSTALLATION_ID",
   "GITHUB_APP_PRIVATE_KEY_BASE64",
@@ -115,6 +117,7 @@ test("agent env only includes provider-safe values", async () => {
     PROVIDER: "codex",
     SLACK_BOT_TOKEN: "xoxb-secret",
     SLACK_APP_TOKEN: "xapp-secret",
+    EUCLEIA_TRUSTED_USERS: "U_TRUSTED",
     GITHUB_APP_ID: "123",
     GITHUB_APP_INSTALLATION_ID: "456",
     GITHUB_APP_PRIVATE_KEY_BASE64: "private-key",
@@ -176,6 +179,35 @@ test("config validates log level env values", async () => {
 
   assert.equal(config.logLevel, "debug");
   await assert.rejects(() => importConfig({ PROVIDER: "codex", LOG_LEVEL: "verbose" }), /LOG_LEVEL must be/);
+});
+
+test("config parses invocation policy lists from the environment", async () => {
+  const config = await importConfig({
+    PROVIDER: "codex",
+    EUCLEIA_ADMINS: "U_ADMIN",
+    EUCLEIA_TRUSTED_USERS: "U_ONE, U_TWO"
+  });
+
+  assert.deepEqual(config.invocationPolicy, {
+    admins: ["U_ADMIN"],
+    trustedUsers: ["U_ONE", "U_TWO"]
+  });
+});
+
+test("config refuses to start Slack with an empty invocation policy (fail closed)", async () => {
+  await assert.rejects(
+    () =>
+      importConfig({
+        PROVIDER: "codex",
+        SLACK_BOT_TOKEN: "xoxb-secret",
+        SLACK_APP_TOKEN: "xapp-secret"
+      }),
+    /EUCLEIA_ADMINS nor EUCLEIA_TRUSTED_USERS/
+  );
+
+  // Without Slack, an empty policy is fine — nothing user-facing is listening.
+  const noSlack = await importConfig({ PROVIDER: "codex" });
+  assert.deepEqual(noSlack.invocationPolicy, { admins: [], trustedUsers: [] });
 });
 
 test("config reports missing Slack env vars by canonical name", async () => {

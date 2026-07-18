@@ -32,6 +32,7 @@ trusted from the request payload.
 | `providerWorker.ts` | Agent-owned socket server/entry point, peer-credential check, and agent-owned git configuration. |
 | `peercred.ts` | Wrapper around the tiny `SO_PEERCRED` helper. |
 | `config.ts`  | User-facing environment configuration, resolved once. |
+| `gate.ts`    | Fail-closed invocation gate: who may drive Eucleia from Slack at all. |
 | `codex.ts`   | Builds and runs `codex exec` with a scrubbed agent environment; maps its `--json` events to progress notes. |
 | `claude.ts`  | Builds and runs `claude` (`stream-json`) with a scrubbed agent environment; maps its events to progress notes. |
 | `process.ts` | Shared provider subprocess lifecycle, output capture, and timeout handling. |
@@ -75,6 +76,13 @@ Logging: `LOG_LEVEL` (`error|warn|info|debug`, default `info`).
 
 Slack (enables the adapter when both are set): `SLACK_BOT_TOKEN`,
 `SLACK_APP_TOKEN`. See [docs/slack-bot-setup.md](docs/slack-bot-setup.md).
+
+Invocation policy (required when Slack is enabled): `EUCLEIA_ADMINS` and
+`EUCLEIA_TRUSTED_USERS` — comma-separated Slack user IDs (for example
+`U0123ABCD,U0456EFGH`). The gate fails closed: only listed users can invoke
+Eucleia, admins are implicitly trusted, and startup fails if Slack is enabled
+while both lists are empty. Admins currently carry no extra runtime powers;
+privileged operations added later must gate on `EUCLEIA_ADMINS`.
 
 GitHub access (enables `eucleia_enable_github` when all three are set):
 `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`,

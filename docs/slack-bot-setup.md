@@ -59,8 +59,8 @@ Each Eucleia image ships exactly one agent — there is no default and no combin
 image. Choose the provider by selecting the matching tag:
 
 ```text
-ghcr.io/cmfcruz/eucleia:latest-codex    # runs Codex CLI
-ghcr.io/cmfcruz/eucleia:latest-claude   # runs Claude Code
+ghcr.io/stabledaemons/eucleia:latest-codex    # runs Codex CLI
+ghcr.io/stabledaemons/eucleia:latest-claude   # runs Claude Code
 ```
 
 The variant bakes `PROVIDER` into the image; you do not set it yourself.
@@ -122,3 +122,17 @@ For channel mentions, invite the bot into each channel where it should respond:
 
 Direct messages should work once `message.im` is subscribed and the app is
 installed.
+
+## 9. Allow users to invoke Eucleia
+
+Eucleia only answers Slack users on its allowlists, and refuses everyone when
+the lists are empty. Set at least one of these env vars (comma-separated Slack
+user IDs) or startup fails:
+
+```text
+EUCLEIA_ADMINS=U0123ABCD
+EUCLEIA_TRUSTED_USERS=U0456EFGH,U0789IJKL
+```
+
+To find a user ID in Slack: open the person's profile, choose the three-dot
+menu, then "Copy member ID".

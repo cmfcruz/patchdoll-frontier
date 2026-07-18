@@ -9,6 +9,8 @@
 
 import { resolve } from "node:path";
 
+import { parseUserList, type InvocationPolicy } from "./gate.js";
+
 // --- Provider selection ---
 // Each image variant ships exactly one agent and bakes PROVIDER. There is
 // no default: a missing or unknown value is a build/run misconfiguration, so we
@@ -140,6 +142,26 @@ export const slackAppToken = process.env.SLACK_APP_TOKEN?.trim() || undefined;
 
 // Slack rejects messages longer than 4000 characters; stay comfortably under it.
 export const maxSlackTextLength = 3900;
+
+// --- Invocation policy (Slack) ---
+// Fail-closed allowlists of Slack user IDs. Admins are implicitly trusted;
+// today they carry no extra runtime powers, but privileged operations added
+// later must gate on EUCLEIA_ADMINS. Anyone not on either list is refused
+// before any agent work starts (see gate.ts).
+export const invocationPolicy: InvocationPolicy = {
+  admins: parseUserList(process.env.EUCLEIA_ADMINS),
+  trustedUsers: parseUserList(process.env.EUCLEIA_TRUSTED_USERS)
+};
+
+// A Slack-enabled bridge with an empty policy would answer no one; that is
+// always a misconfiguration, so fail at startup (consistent with PROVIDER)
+// rather than deploying a bot that silently ignores everybody.
+if (slackEnabled() && invocationPolicy.admins.length === 0 && invocationPolicy.trustedUsers.length === 0) {
+  throw new Error(
+    "Slack is enabled but neither EUCLEIA_ADMINS nor EUCLEIA_TRUSTED_USERS is set; " +
+      "Eucleia fails closed and would answer no one. Set at least one Slack user ID."
+  );
+}
 
 export function slackEnabled(): boolean {
   return Boolean(slackBotToken && slackAppToken);

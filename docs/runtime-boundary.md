@@ -62,6 +62,16 @@ Do not bind the bridge to a public or untrusted interface. If a deployment must
 listen beyond loopback, add authentication and authorization before exposing
 `/settings`, `/mcp`, or `/github/credential`.
 
+## Invocation gate
+
+Slack requests pass a fail-closed allowlist before any agent work starts:
+only user IDs in `EUCLEIA_ADMINS` or `EUCLEIA_TRUSTED_USERS` may invoke
+Eucleia, decided on the current message's actor only (never thread
+participants or quoted transcript content, which are untrusted data). Startup
+fails when Slack is enabled and both lists are empty. The loopback control
+plane endpoints are not gated; they are reachable only from inside the
+container by design.
+
 ## Threat model
 
 The UID split prevents the network-facing bridge from creating agent-owned

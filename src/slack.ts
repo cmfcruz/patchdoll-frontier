@@ -10,6 +10,7 @@ import { App, LogLevel as BoltLogLevel, type SayFn } from "@slack/bolt";
 
 import { agent, type AgentRunResult } from "./agent.js";
 import {
+  invocationPolicy,
   maxSlackTextLength,
   messageOf,
   missingSlackEnvVars,
@@ -18,6 +19,7 @@ import {
   slackEnabled,
   workspace
 } from "./config.js";
+import { actorMayInvoke, invocationDeniedReply } from "./gate.js";
 import { log, logLevel } from "./log.js";
 import { buildAgentPrompt } from "./prompt.js";
 
@@ -143,6 +145,18 @@ async function handleSlackRequest(input: {
 }): Promise<void> {
   const { event, client } = input;
   const threadTs = event.thread_ts || event.ts;
+
+  // Invocation gate: decided on the current message's actor only, before any
+  // agent work (including the placeholder). Fail closed — see gate.ts.
+  if (!actorMayInvoke(event.user, invocationPolicy)) {
+    log.info(`invocation denied for ${input.type} (actor=${event.user ?? "unknown"}, channel=${event.channel})`);
+    try {
+      await input.say({ text: invocationDeniedReply(), thread_ts: threadTs });
+    } catch (error) {
+      log.error(`could not post Slack denial reply: ${messageOf(error)}`);
+    }
+    return;
+  }
 
   // Post the placeholder we will keep editing. If even this fails there is
   // nothing we can reply into, so log and bail rather than crash the handler.
