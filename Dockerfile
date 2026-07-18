@@ -95,7 +95,7 @@ RUN set -eux; \
   chmod 0750 /home/eucleia; \
   chmod 0700 /home/agent; \
   chmod 0755 /run/eucleia; \
-  chmod 0750 /run/eucleia/bridge; \
+  chmod 2750 /run/eucleia/bridge; \
   chmod 2750 /run/eucleia/providers; \
   chmod 2770 /workspace
 

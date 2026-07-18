@@ -188,9 +188,12 @@ require("node:http")
   .end();
 `;
 
+  // setgid so the helper file inherits group eucleia-ipc (not the bridge's
+  // primary group eucleia); the shared IPC group is what lets the agent user
+  // read and execute it. Keep the helper itself group-readable/executable only.
   const helperDir = dirname(githubCredentialHelperPath);
-  await mkdir(helperDir, { recursive: true, mode: 0o750 });
-  await chmod(helperDir, 0o750);
+  await mkdir(helperDir, { recursive: true, mode: 0o2750 });
+  await chmod(helperDir, 0o2750);
   await writeFile(githubCredentialHelperPath, script, { mode: 0o550 });
   await chmod(githubCredentialHelperPath, 0o550);
 }

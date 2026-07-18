@@ -25,7 +25,17 @@ const envKeys = [
   "GITHUB_APP_PRIVATE_KEY_BASE64",
   "CLAUDE_CODE_OAUTH_TOKEN",
   "ANTHROPIC_API_KEY",
-  "TERM"
+  "TERM",
+  "HTTP_PROXY",
+  "HTTPS_PROXY",
+  "NO_PROXY",
+  "http_proxy",
+  "https_proxy",
+  "no_proxy",
+  "NODE_EXTRA_CA_CERTS",
+  "SSL_CERT_FILE",
+  "SSL_CERT_DIR",
+  "GIT_SSL_CAINFO"
 ];
 
 let importId = 0;
@@ -148,6 +158,28 @@ test("agent env only includes provider-safe values", async () => {
     CLAUDE_CODE_OAUTH_TOKEN: "claude-oauth",
     ANTHROPIC_API_KEY: "anthropic-key"
   });
+});
+
+test("agent env forwards operator proxy and CA settings when set", async () => {
+  const proxyAndCa = {
+    HTTP_PROXY: "http://proxy:3128",
+    HTTPS_PROXY: "http://proxy:3128",
+    NO_PROXY: "localhost,127.0.0.1",
+    http_proxy: "http://proxy:3128",
+    https_proxy: "http://proxy:3128",
+    no_proxy: "localhost,127.0.0.1",
+    NODE_EXTRA_CA_CERTS: "/etc/ssl/extra.pem",
+    SSL_CERT_FILE: "/etc/ssl/cert.pem",
+    SSL_CERT_DIR: "/etc/ssl/certs",
+    GIT_SSL_CAINFO: "/etc/ssl/git-ca.pem"
+  };
+
+  const config = await importConfig({ PROVIDER: "codex", ...proxyAndCa });
+
+  for (const [key, value] of Object.entries(proxyAndCa)) {
+    assert.equal(config.codexAgentEnv()[key], value);
+    assert.equal(config.claudeAgentEnv()[key], value);
+  }
 });
 
 test("Claude agent env maps memory overrides to its native disable switch", async () => {

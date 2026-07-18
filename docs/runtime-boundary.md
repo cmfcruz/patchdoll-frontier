@@ -45,7 +45,10 @@ cannot spoof this check.
 
 `eucleia_enable_github` keeps long-lived GitHub App secrets and token minting
 in the bridge. The bridge writes a read-only credential helper under its runtime
-directory, then asks the worker over the same authenticated socket to configure
+directory (`/run/eucleia/bridge`, setgid mode `2750`, group `eucleia-ipc`) so the
+helper inherits the shared IPC group and the `agent` user can read and execute it
+without it being writable. It then asks the worker over the same authenticated
+socket to configure
 the agent-owned global git config. Git later obtains short-lived credentials
 from the loopback bridge endpoint.
 

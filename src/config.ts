@@ -242,6 +242,16 @@ function parseBooleanEnv(name: string, raw: string | undefined): boolean | undef
   throw new Error(`${name} must be true, false, 1, or 0; got: '${raw?.trim()}'`);
 }
 
+// Operator proxy/CA settings forwarded verbatim from the environment (the same
+// vars the entrypoint injects into the worker). Resolved once at startup, like
+// every other value here; unset ones stay undefined so tidy() drops them.
+const proxyAndCaEnv: Record<string, string | undefined> = Object.fromEntries(
+  ["HTTP_PROXY", "HTTPS_PROXY", "NO_PROXY", "http_proxy", "https_proxy", "no_proxy",
+   "NODE_EXTRA_CA_CERTS", "SSL_CERT_FILE", "SSL_CERT_DIR", "GIT_SSL_CAINFO"].map(
+    (name) => [name, process.env[name]]
+  )
+);
+
 function baseAgentEnv(extra: Record<string, string | undefined>): NodeJS.ProcessEnv {
   return tidy({
     HOME: agentHome,
@@ -250,6 +260,10 @@ function baseAgentEnv(extra: Record<string, string | undefined>): NodeJS.Process
     PATH: agentPath,
     TERM: agentTerm,
     DISABLE_AUTOUPDATER: "1",
+    // Operator proxy/CA settings the entrypoint forwards into the worker
+    // environment. Pass them through so provider CLIs and git honor them;
+    // unset ones stay undefined and tidy() drops them.
+    ...proxyAndCaEnv,
     ...extra
   });
 }

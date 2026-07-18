@@ -15,6 +15,11 @@ int main(void) {
     return 1;
   }
 
-  printf("{\"pid\":%d,\"uid\":%d,\"gid\":%d}\n", cred.pid, cred.uid, cred.gid);
+  if (len != sizeof(cred)) {
+    fprintf(stderr, "getsockopt(SO_PEERCRED) returned unexpected size %u\n", (unsigned)len);
+    return 1;
+  }
+
+  printf("{\"pid\":%d,\"uid\":%u,\"gid\":%u}\n", cred.pid, cred.uid, cred.gid);
   return 0;
 }

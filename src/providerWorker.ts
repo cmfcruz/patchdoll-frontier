@@ -100,10 +100,17 @@ async function gitConfig(key: string, value: string): Promise<void> {
 }
 
 function bridgeCredentials(): { uid: number; gid: number } {
-  const uid = Number(process.env.EUCLEIA_BRIDGE_UID);
-  const gid = Number(process.env.EUCLEIA_BRIDGE_GID);
-  if (!Number.isInteger(uid) || !Number.isInteger(gid)) throw new Error("Invalid bridge credentials");
-  return { uid, gid };
+  return { uid: bridgeId("EUCLEIA_BRIDGE_UID"), gid: bridgeId("EUCLEIA_BRIDGE_GID") };
+}
+
+// Must be a positive integer. Number("") is 0, so a blank value would otherwise
+// silently authorize uid/gid 0 (root); require an explicit non-zero id instead.
+function bridgeId(name: string): number {
+  const raw = process.env[name];
+  if (raw === undefined || !/^[1-9][0-9]*$/.test(raw)) {
+    throw new Error(`${name} must be a positive integer; got: '${raw ?? ""}'`);
+  }
+  return Number(raw);
 }
 
 await startProviderWorker();

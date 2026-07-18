@@ -69,7 +69,7 @@ prepare_runtime_dirs() {
   chown eucleia:eucleia-ipc /run/eucleia/bridge
   chown agent:eucleia-ipc /run/eucleia/providers
   chmod 0755 /run/eucleia
-  chmod 0750 /run/eucleia/bridge
+  chmod 2750 /run/eucleia/bridge
   chmod 2750 /run/eucleia/providers
 }
 
