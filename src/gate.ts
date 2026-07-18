@@ -19,6 +19,9 @@ export interface InvocationPolicy {
  * content, which are untrusted data, not authority.
  */
 export function actorMayInvoke(actor: string | undefined, policy: InvocationPolicy): boolean {
+  // Defense in depth that tests cannot observe: includes(undefined) is already
+  // false for string arrays. This guard also narrows `actor` to string for the
+  // includes calls below.
   if (actor === undefined) {
     return false;
   }

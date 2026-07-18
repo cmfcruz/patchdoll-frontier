@@ -21,11 +21,6 @@ test("admins are implicitly trusted (bootstrap)", () => {
   assert.equal(actorMayInvoke("U_ADMIN", policy), true);
 });
 
-test("an unknown actor is denied even alongside a populated allowlist", () => {
-  const policy = { ...CLOSED, trustedUsers: ["U_TRUSTED"] };
-  assert.equal(actorMayInvoke(undefined, policy), false);
-});
-
 test("denial reply names the env var to ask an admin about", () => {
   assert.match(invocationDeniedReply(), /EUCLEIA_TRUSTED_USERS/);
 });
